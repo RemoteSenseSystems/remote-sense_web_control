@@ -176,6 +176,7 @@ export default function Home() {
         height="1080"
         src={images_list[currentIndex % images_list.length]}
         sizes="100vw"
+        alt="Timelapse"
       />
       <div className="flex gap-3">
         <Link
