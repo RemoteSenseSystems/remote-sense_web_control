@@ -4,11 +4,9 @@ import { Link } from "@nextui-org/link";
 import { Snippet } from "@nextui-org/snippet";
 import { Code } from "@nextui-org/code";
 import { button as buttonStyles } from "@nextui-org/theme";
-
 import { siteConfig } from "@/config/site";
 import { title, subtitle } from "@/components/primitives";
 import { GithubIcon } from "@/components/icons";
-import { CldImage } from 'next-cloudinary';
 import { useEffect, useState } from "react";
 
 const images_list = [
@@ -149,14 +147,38 @@ const images_list = [
   "http://res.cloudinary.com/dn9rloq0x/image/upload/h_360/v1726214003/2024-09-12_08-50-10.jpg",
 ];
 
+
+
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [preloadImageAmout, setPreloadImageAmout] = useState(0);
+  const [isPreloading, setIsPreloading] = useState(false);
   const intervalTime = 200;  // 1000 milliseconds = 1 second
-  if (currentIndex==0) {
-    setInterval(() => {
-      setCurrentIndex( state => state + 1);
-    }, intervalTime);
+
+  const preloadImages = (array: string[]) => {
+    for (var i = 0; i < array.length; i++) {
+      var img = document.createElement("img");
+      img.onload = function () {
+        setPreloadImageAmout(state => state + 1);
+      }
+      img.src = array[i];
+      img.alt = "preload";
+    }
   }
+
+  useEffect(() => {
+    if (!isPreloading) {
+      preloadImages(images_list);
+      setIsPreloading(true);
+    }
+
+    if (currentIndex == 0 && preloadImageAmout >= images_list.length) {
+      setInterval(() => {
+        setCurrentIndex(state => state + 1);
+      }, intervalTime);
+    }
+  }
+  );
 
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
@@ -171,10 +193,11 @@ export default function Home() {
           Beautiful, fast and modern React UI library.
         </h2>
       </div>
+      {preloadImageAmout / images_list.length * 100}%
       <img
         width="1920"
         height="1080"
-        src={images_list[currentIndex % images_list.length]}
+        src={preloadImageAmout == images_list.length ? images_list[currentIndex % images_list.length] : images_list[images_list.length - 1]}
         sizes="100vw"
         alt="Timelapse"
       />
