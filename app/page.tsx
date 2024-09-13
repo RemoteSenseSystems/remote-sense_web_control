@@ -171,7 +171,7 @@ export default function Home() {
           Beautiful, fast and modern React UI library.
         </h2>
       </div>
-      <CldImage id="timelapse"
+      <img
         width="1920"
         height="1080"
         src={images_list[currentIndex % images_list.length]}
