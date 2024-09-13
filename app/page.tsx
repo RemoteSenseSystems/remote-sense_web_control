@@ -258,7 +258,7 @@ export default function Home() {
       <img
         width="1920"
         height="1080"
-        src={preloadImageAmout >= images_list.length ? images_list[currentIndex % images_list.length] : images_list[images_list.length - 1]}
+        src={preloadImageAmout >= images_list.length ? images_list[images_list.length-1-(currentIndex % images_list.length)] : images_list[0]}
         sizes="100vw"
         alt="Timelapse"
       />
