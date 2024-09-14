@@ -123,6 +123,7 @@ export default function Home() {
       <img
         onContextMenu={(event) => {
           event.preventDefault();
+          event.stopPropagation();
           return false;
         }}
         onTouchStart={() => setIndexOverride(0)}
