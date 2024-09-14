@@ -121,12 +121,11 @@ export default function Home() {
       Image Found: {imageFound}<br />
       Preload Progress: {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%<br />
       <img
-        onTouchStart={(event) => {
+        onContextMenu={(event) => {
           event.preventDefault();
-          event.stopPropagation();
-          setIndexOverride(0);
           return false;
         }}
+        onTouchStart={() => setIndexOverride(0)}
         onTouchEnd={() => setIndexOverride(-1)}
         width="1920"
         height="1080"
