@@ -15,6 +15,7 @@ export default function Home() {
   const [imageFound, setImageFound] = useState(0);
   const [images_list, setImagesList] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [indexOverride, setIndexOverride] = useState(-1);
   const [preloadImageAmout, setPreloadImageAmout] = useState(0);
   const [isPreloading, setIsPreloading] = useState(false);
   const intervalTime = 200;  // 1000 milliseconds = 1 second
@@ -102,6 +103,8 @@ export default function Home() {
   }
   );
 
+  const isImagePreloadEnough = () => (preloadImageAmout >= images_list.length * 0.6);
+
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
       <div className="inline-block max-w-xl text-center justify-center">
@@ -118,9 +121,20 @@ export default function Home() {
       Image Found: {imageFound}<br />
       Preload Progress: {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%<br />
       <img
+        onTouchStart={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setIndexOverride(0);
+          return false;
+        }}
+        onTouchEnd={() => setIndexOverride(-1)}
         width="1920"
         height="1080"
-        src={preloadImageAmout >= images_list.length * 0.6 ? images_list[images_list.length - 1 - currentIndex] : images_list[0]}
+        src={
+          indexOverride != -1
+            ? images_list[indexOverride]
+            : isImagePreloadEnough() ? images_list[images_list.length - 1 - currentIndex] : images_list[0]
+        }
         sizes="100vw"
         alt="Timelapse"
       />
