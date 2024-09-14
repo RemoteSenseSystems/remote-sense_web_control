@@ -124,7 +124,6 @@ export default function Home() {
         draggable="false"
         onContextMenu={(event) => {
           event.preventDefault();
-          event.stopPropagation();
           return false;
         }}
         onTouchStart={() => setIndexOverride(0)}
