@@ -34,7 +34,7 @@ export default function Home() {
     myHeaders.append("Content-Type", "application/json");
 
     const raw = JSON.stringify({
-      "expression": "resource_type=image AND display_name:2024-09-13 AND asset_folder=timelapse AND type=upload",
+      "expression": "resource_type=image AND uploaded_at>24h AND asset_folder=timelapse AND type=upload",
       "sort_by": [
         {
           "public_id": "desc"
@@ -81,20 +81,20 @@ export default function Home() {
     console.log("***requestImageListFailed: " + requestImageListFailed);
 
     if (imageFound == 0 && !requestImageListFailed) {
-      console.log("***loadImageList");
+      console.log("###***loadImageList");
       loadImageList();
     };
 
     if (!isPreloading && imageFound != 0 && images_list.length == imageFound) {
-      console.log("***preloadImages");
+      console.log("###***preloadImages");
       preloadImages(images_list);
       setIsPreloading(true);
     }
 
-    if (currentIndex == 0 && preloadImageAmout != 0 && preloadImageAmout >= images_list.length) {
-      console.log("***setInterval");
+    if (currentIndex == 0 && preloadImageAmout != 0 && preloadImageAmout >= images_list.length * 0.6) {
+      console.log("###***setInterval");
       setInterval(() => {
-        setCurrentIndex(state => state + 1);
+        setCurrentIndex(state => (state + 1) % images_list.length);
       }, intervalTime);
     }
   }
@@ -113,11 +113,12 @@ export default function Home() {
           Beautiful, fast and modern React UI library.
         </h2>
       </div>
-      {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%
+      Image Found: {imageFound}<br/>
+      Preload Progress: {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%
       <img
         width="1920"
         height="1080"
-        src={preloadImageAmout >= images_list.length ? images_list[images_list.length - 1 - (currentIndex % images_list.length)] : images_list[0]}
+        src={preloadImageAmout >= images_list.length *0.6 ? images_list[images_list.length - 1 - (currentIndex)] : images_list[0]}
         sizes="100vw"
         alt="Timelapse"
       />
