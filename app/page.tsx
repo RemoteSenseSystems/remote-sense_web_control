@@ -130,7 +130,10 @@ export default function Home() {
         onTouchMove={(event) => {
           const screenWidth = window.innerWidth;
           const touchX = event.touches[0].clientX;
-          const newIndex = Math.floor((touchX / screenWidth) * images_list.length);
+          const touchControlAreaPercentage = 0.8;
+          var newIndex = Math.floor(((touchX - screenWidth * (1 - touchControlAreaPercentage) / 2) / screenWidth / touchControlAreaPercentage) * images_list.length);
+          if (newIndex < 0) newIndex = 0;
+          if (newIndex >= images_list.length) newIndex = images_list.length - 1;
           setIndexOverride(images_list.length - 1 - newIndex);
 
         }}
