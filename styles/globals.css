@@ -3,9 +3,10 @@
 @tailwind utilities;
 
 @layer base {
-    img {
-        -webkit-user-select: none;
+    body{
         user-select: none;
+    }
+    img {
         -webkit-touch-callout: none;
     }
 }
