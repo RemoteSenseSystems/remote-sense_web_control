@@ -38,13 +38,13 @@ export default function Home() {
       "expression": "resource_type=image AND uploaded_at>24h AND asset_folder=timelapse AND type=upload",
       "sort_by": [
         {
-          "public_id": "asc"
+          "created_at": "desc"
         }
       ],
       "fields": [
         "secure_url"
       ],
-      "max_results": 500
+      "max_results": 100
     });
 
     const response = await fetch("/cld/v1_1/dn9rloq0x/resources/search", {
@@ -115,12 +115,12 @@ export default function Home() {
           Beautiful, fast and modern React UI library.
         </h2>
       </div>
-      Image Found: {imageFound}<br/>
-      Preload Progress: {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%<br/>
+      Image Found: {imageFound}<br />
+      Preload Progress: {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%<br />
       <img
         width="1920"
         height="1080"
-        src={preloadImageAmout >= images_list.length *0.6 ? images_list[currentIndex] : images_list[0]}
+        src={preloadImageAmout >= images_list.length * 0.6 ? images_list[images_list.length - 1 - currentIndex] : images_list[0]}
         sizes="100vw"
         alt="Timelapse"
       />
