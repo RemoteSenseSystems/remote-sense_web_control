@@ -10,6 +10,7 @@ import { GithubIcon } from "@/components/icons";
 import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [isIntervalSet, setIsIntervalSet] = useState(false);
   const [requestImageListFailed, setRequestImageListFailed] = useState(false);
   const [imageFound, setImageFound] = useState(0);
   const [images_list, setImagesList] = useState<string[]>([]);
@@ -37,7 +38,7 @@ export default function Home() {
       "expression": "resource_type=image AND uploaded_at>24h AND asset_folder=timelapse AND type=upload",
       "sort_by": [
         {
-          "public_id": "desc"
+          "public_id": "asc"
         }
       ],
       "fields": [
@@ -91,8 +92,9 @@ export default function Home() {
       setIsPreloading(true);
     }
 
-    if (currentIndex == 0 && preloadImageAmout != 0 && preloadImageAmout >= images_list.length * 0.6) {
+    if (!isIntervalSet && images_list.length != 0 && preloadImageAmout >= images_list.length * 0.6) {
       console.log("###***setInterval");
+      setIsIntervalSet(true);
       setInterval(() => {
         setCurrentIndex(state => (state + 1) % images_list.length);
       }, intervalTime);
@@ -114,11 +116,11 @@ export default function Home() {
         </h2>
       </div>
       Image Found: {imageFound}<br/>
-      Preload Progress: {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%
+      Preload Progress: {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%<br/>
       <img
         width="1920"
         height="1080"
-        src={preloadImageAmout >= images_list.length *0.6 ? images_list[images_list.length - 1 - (currentIndex)] : images_list[0]}
+        src={preloadImageAmout >= images_list.length *0.6 ? images_list[currentIndex] : images_list[0]}
         sizes="100vw"
         alt="Timelapse"
       />
