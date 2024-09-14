@@ -127,15 +127,11 @@ export default function Home() {
         }}
         onTouchStart={() => setIndexOverride(0)}
         onTouchMove={(event) => {
-          // get where I'm touching
-          console.log("****$$$" + event.touches[0].clientX);
-          // screen width
           const screenWidth = window.innerWidth;
           const touchX = event.touches[0].clientX;
           const newIndex = Math.floor((touchX / screenWidth) * images_list.length);
-          setIndexOverride(newIndex);
-          // calculate the index
-          // set the index
+          setIndexOverride(images_list.length - 1 - newIndex);
+
         }}
         onTouchEnd={() => setIndexOverride(-1)}
         width="1920"
