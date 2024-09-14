@@ -121,6 +121,7 @@ export default function Home() {
       Image Found: {imageFound}<br />
       Preload Progress: {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%<br />
       <img
+        draggable="false"
         onContextMenu={(event) => {
           event.preventDefault();
           event.stopPropagation();
