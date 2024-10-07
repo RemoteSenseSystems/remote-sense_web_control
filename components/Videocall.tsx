@@ -11,7 +11,7 @@ import { PhoneOff } from "lucide-react";
 import { Button } from "@nextui-org/button";
 import { WorkAroundForSafari } from "@/utils/safari";
 import Timelapse from "./Timelapse";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 
 const Videocall = (props: { slug: string; JWT: string }) => {
   const session = props.slug;
@@ -67,7 +67,8 @@ const Videocall = (props: { slug: string; JWT: string }) => {
       );
       videoContainerRef.current!.appendChild(userVideo as VideoPlayer);
       const timelapseElement = document.createElement("div");
-      ReactDOM.render(<Timelapse camId={"a"} />, timelapseElement);
+      const root = createRoot(timelapseElement);
+      root.render(<Timelapse camId={"a"} />);
       videoContainerRef.current!.appendChild(timelapseElement);
     }
   };
