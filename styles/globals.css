@@ -3,10 +3,79 @@
 @tailwind utilities;
 
 @layer base {
-    body{
+    body {
         user-select: none;
     }
+
     img {
         -webkit-touch-callout: none;
     }
+}
+
+video-player-container {
+    width: 100%;
+    height: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+video-player-container:has(> :nth-child(2)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+video-player-container:has(> :nth-child(5)) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+video-player-container:has(> :nth-child(17)) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+video-player {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+}
+
+/* Container holding the image and the text */
+.container {
+    position: relative;
+    text-align: center;
+    color: white;
+}
+
+/* Bottom left text */
+.bottom-left {
+    position: absolute;
+    bottom: 8px;
+    left: 16px;
+}
+
+/* Top left text */
+.top-left {
+    position: absolute;
+    top: 8px;
+    left: 16px;
+}
+
+/* Top right text */
+.top-right {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+}
+
+/* Bottom right text */
+.bottom-right {
+    position: absolute;
+    bottom: 8px;
+    right: 16px;
+}
+
+/* Centered text */
+.centered {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
