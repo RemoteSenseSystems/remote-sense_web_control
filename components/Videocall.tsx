@@ -50,6 +50,10 @@ const Videocall = (props: { slug: string; JWT: string }) => {
     });
   };
 
+  const sendCommand = async (command: string) => {
+    await client.current.getCommandClient().send(command);
+  }
+
   const renderVideo = async (event: {
     action: "Start" | "Stop";
     userId: number;
@@ -89,6 +93,8 @@ const Videocall = (props: { slug: string; JWT: string }) => {
       <h1 className="text-center text-3xl font-bold mb-4 mt-0">
         Session: {session}
       </h1>
+      `Cross origin isolated: ${window.crossOriginIsolated ? "✅" : "❌"}`
+
       <div
         className="flex w-full flex-1"
         style={inSession ? {} : { display: "none" }}
@@ -119,6 +125,9 @@ const Videocall = (props: { slug: string; JWT: string }) => {
             />
             <Button onClick={leaveSession} title="leave session">
               <PhoneOff />
+            </Button>
+            <Button onClick={() => sendCommand("#l")} title="send command">
+              Send Command
             </Button>
           </div>
         </div>

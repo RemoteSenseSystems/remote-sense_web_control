@@ -42,7 +42,7 @@ export default function RootLayout({
           fontSans.variable,
         )}
       >
-        <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
+        {/* <Script src="/coi-serviceworker.js" strategy="beforeInteractive" /> */}
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
           <div className="relative flex flex-col h-screen">
             <Navbar />
