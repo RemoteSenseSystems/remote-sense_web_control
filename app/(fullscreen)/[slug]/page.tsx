@@ -11,8 +11,8 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const jwt = await getData(params.slug);
   return (
     <main>
-      <Videocall slug={params.slug} JWT={jwt} />
       <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
+      <Videocall slug={params.slug} JWT={jwt} />
     </main>
   );
 }
