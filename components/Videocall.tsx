@@ -12,6 +12,7 @@ import { Button } from "@nextui-org/button";
 import { WorkAroundForSafari } from "@/utils/safari";
 import Timelapse from "./Timelapse";
 import { createRoot } from "react-dom/client";
+import { COI } from "./coi";
 
 const Videocall = (props: { slug: string; JWT: string }) => {
   const session = props.slug;
@@ -19,7 +20,7 @@ const Videocall = (props: { slug: string; JWT: string }) => {
   const [inSession, setInSession] = useState(false);
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
   const [isVideoMuted, setIsVideoMuted] = useState(
-    !client.current.getCurrentUserInfo()?.bVideoOn
+    true //!client.current.getCurrentUserInfo()?.bVideoOn
   );
   const [isAudioMuted, setIsAudioMuted] = useState(
     client.current.getCurrentUserInfo()?.muted ?? true
@@ -30,24 +31,30 @@ const Videocall = (props: { slug: string; JWT: string }) => {
     await client.current.init("en-US", "Global", { patchJsMedia: true });
     client.current.on(
       "peer-video-state-change",
-      (payload) => void renderVideo(payload)
+      (payload) => {
+        void renderVideo(payload);
+      }
     );
     await client.current.join(session, jwt, userName, "0000").catch((e) => {
       console.log("***" + JSON.stringify(e) + "***");
     });
+    const timelapseElement = document.createElement("div");
+    const root = createRoot(timelapseElement);
+    root.render(<Timelapse camId={"a"} />);
+    videoContainerRef.current!.appendChild(timelapseElement);
     setInSession(true);
     const mediaStream = client.current.getMediaStream();
-    // @ts-expect-error https://stackoverflow.com/questions/7944460/detect-safari-browser/42189492#42189492
-    window.safari
-      ? await WorkAroundForSafari(client.current)
-      : await mediaStream.startAudio();
-    setIsAudioMuted(client.current.getCurrentUserInfo().muted ?? true);
-    await mediaStream.startVideo();
-    setIsVideoMuted(!client.current.getCurrentUserInfo().bVideoOn);
-    await renderVideo({
-      action: "Start",
-      userId: client.current.getCurrentUserInfo().userId,
-    });
+    // @@ts-expect-error https://stackoverflow.com/questions/7944460/detect-safari-browser/42189492#42189492
+    // window.safari
+    //   ? await WorkAroundForSafari(client.current)
+    //   : await mediaStream.startAudio();
+    setIsAudioMuted(true); //client.current.getCurrentUserInfo().muted ?? true);
+    // await mediaStream.startVideo();
+    setIsVideoMuted(true); //!client.current.getCurrentUserInfo().bVideoOn);
+    // await renderVideo({
+    //   action: "Start",
+    //   userId: client.current.getCurrentUserInfo().userId,
+    // });
   };
 
   const sendCommand = async (command: string) => {
@@ -70,10 +77,10 @@ const Videocall = (props: { slug: string; JWT: string }) => {
         VideoQuality.Video_360P
       );
       videoContainerRef.current!.appendChild(userVideo as VideoPlayer);
-      const timelapseElement = document.createElement("div");
-      const root = createRoot(timelapseElement);
-      root.render(<Timelapse camId={"a"} />);
-      videoContainerRef.current!.appendChild(timelapseElement);
+      // const timelapseElement = document.createElement("div");
+      // const root = createRoot(timelapseElement);
+      // root.render(<Timelapse camId={"a"} />);
+      // videoContainerRef.current!.appendChild(timelapseElement);
     }
   };
 
@@ -88,13 +95,17 @@ const Videocall = (props: { slug: string; JWT: string }) => {
     window.location.href = "/";
   };
 
+  if (!inSession) { joinSession(); }
+
+
+
+
   return (
     <div className="flex h-full w-full flex-1 flex-col">
+      <COI />
       <h1 className="text-center text-3xl font-bold mb-4 mt-0">
         Session: {session}
       </h1>
-      `Cross origin isolated: ${window.crossOriginIsolated ? "✅" : "❌"}`
-
       <div
         className="flex w-full flex-1"
         style={inSession ? {} : { display: "none" }}
@@ -112,7 +123,7 @@ const Videocall = (props: { slug: string; JWT: string }) => {
       ) : (
         <div className="flex w-full flex-col justify-around self-center">
           <div className="mt-4 flex w-[30rem] flex-1 justify-around self-center rounded-md bg-white p-4">
-            <CameraButton
+            {/* <CameraButton
               client={client}
               isVideoMuted={isVideoMuted}
               setIsVideoMuted={setIsVideoMuted}
@@ -122,7 +133,7 @@ const Videocall = (props: { slug: string; JWT: string }) => {
               isAudioMuted={isAudioMuted}
               client={client}
               setIsAudioMuted={setIsAudioMuted}
-            />
+            /> */}
             <Button onClick={leaveSession} title="leave session">
               <PhoneOff />
             </Button>

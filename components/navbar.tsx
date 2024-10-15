@@ -25,6 +25,7 @@ import {
   SearchIcon,
   Logo,
 } from "@/components/icons";
+import { COI } from "./coi";
 
 export const Navbar = () => {
   const searchInput = (
@@ -72,6 +73,7 @@ export const Navbar = () => {
               </NextLink>
             </NavbarItem>
           ))}
+          <COI />
         </ul>
       </NavbarContent>
 
