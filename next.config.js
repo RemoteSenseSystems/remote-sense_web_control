@@ -5,7 +5,7 @@ const nextConfig = {
     return [
       {
         // matching all API routes
-        source: "/:path*",
+        source: "/:slug",
         headers: [
           { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
