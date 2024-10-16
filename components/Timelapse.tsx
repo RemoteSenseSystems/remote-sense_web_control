@@ -1,7 +1,5 @@
 'use client'
 
-import { user } from "@nextui-org/theme";
-import { time } from "console";
 import { useEffect, useState } from "react";
 
 const Timelapse = (props: { camId: string, speedTimes?: number }) => {
@@ -15,7 +13,7 @@ const Timelapse = (props: { camId: string, speedTimes?: number }) => {
     const [indexOverride, setIndexOverride] = useState(-1);
     const [preloadImageAmout, setPreloadImageAmout] = useState(0);
     const [isPreloading, setIsPreloading] = useState(false);
-    const times = props.speedTimes ?? 3000; // default 3000 times faster
+    const times = props.speedTimes ?? 1000; // default 3000 times faster
     const interval = (1000 * 60 * 5) / times;  // 5 minutes = 1000*60*5, 3000 times faster
 
     const preloadImages = (array: string[]) => {

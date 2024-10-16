@@ -11,7 +11,7 @@ import Timelapse from "@/components/Timelapse";
 import { useState } from "react";
 
 export default function Home() {
-  const [speedTimes, setSpeedTimes] = useState(3000);
+  const [speedTimes, setSpeedTimes] = useState(1000);
 
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
