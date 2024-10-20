@@ -1,9 +1,7 @@
 "use client";
 
-import { CSSProperties, use, useEffect, useRef, useState } from "react";
+import { CSSProperties, useEffect, useRef, useState } from "react";
 import ZoomVideo, {
-  VideoPlayer,
-  VideoQuality,
   type VideoClient,
 } from "@zoom/videosdk";
 import { PhoneOff } from "lucide-react";
@@ -12,13 +10,14 @@ import { COI } from "./coi";
 import { CamPanel, VideoPanelMode } from "./CamPanel";
 
 // linanw, use "async" here will have error.
-const Videocall = (props: { slug: string; JWT: string }) => {
+const Videocall = (props: { session_name: string; JWT: string }) => {
   const [suggestedMode, setSuggestedMode] = useState(VideoPanelMode.Stream);
-  const session = props.slug;
+  const session = props.session_name;
+  console.log("session: ", session);
   const jwt = props.JWT;
-  const [inSession, setInSession] = useState(false);
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
-  const [camIdList, setCamIdList] = useState<string[]>(["linanw-cnc_cam7", "default_cam0", "default_cam1", "default_cam2", "default_cam3", "default_cam4", "default_cam5", "default_cam6", "default_cam7"]);
+  const [camIdList, setCamIdList] = useState<string[]>(["default_lubuntu-x299e", "linanw-cnc_cam7", "default_cam0", "default_cam1", "default_cam2", "default_cam3", "default_cam4", "default_cam5", "default_cam6", "default_cam7"]);
+  const [currentTimeoutId, setCurrentTimeoutId] = useState<number>(0);
 
   const joinSession = async () => {
     console.log("joinSession");
@@ -38,7 +37,24 @@ const Videocall = (props: { slug: string; JWT: string }) => {
     // window.location.href = "/";
   };
 
-  useEffect(() => { joinSession(); }, [props.slug]);
+  useEffect(() => {
+    joinSession();
+
+    // schedule a timer to refresh the page at 00:00
+    if (currentTimeoutId !== 0) {
+      clearTimeout(currentTimeoutId);
+    }
+    const now = new Date();
+    var millisTill00 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime() - now.getTime();
+    if (millisTill00 < 0) {
+      millisTill00 += 86400000; // it's after 00:00, try 00:00 tomorrow.
+    }
+    const timeoutId = setTimeout(function () {
+      window.location.reload();
+    }, millisTill00);
+    setCurrentTimeoutId(timeoutId as unknown as number); // linanw: if here is a type error, please ignore it, it's not valid.
+
+  }, [props.session_name]);
 
   return (
     <>
