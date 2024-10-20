@@ -10,11 +10,12 @@ const Videocall = dynamic<{ session_name: string; JWT: string }>(
 export default async function Page({ params }: { params: { slug: string } }) {
   const getDATETIME_SURFIX = () => {
     const now = new Date();
-    const year = now.getFullYear() % 100;
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    // const hours = String(now.getHours()).padStart(2, '0');
-    // const minutes = String(Math.floor(now.getMinutes() / 5)).padStart(2, '0');
+    const singaporeTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Singapore" }));
+    const year = singaporeTime.getFullYear() % 100;
+    const month = String(singaporeTime.getMonth() + 1).padStart(2, '0');
+    const day = String(singaporeTime.getDate()).padStart(2, '0');
+    // const hours = String(singaporeTime.getHours()).padStart(2, '0');
+    // const minutes = String(Math.floor(singaporeTime.getMinutes() / 5)).padStart(2, '0');
     return `${year}${month}${day}`; //-${hours}${minutes}`;
   };
   const session_name = `${params.slug}_${getDATETIME_SURFIX()}`;
