@@ -16,7 +16,7 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
   console.log("session: ", session);
   const jwt = props.JWT;
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
-  const [camIdList, setCamIdList] = useState<string[]>(["default_lubuntu-x299e", "linanw-cnc_cam7", "default_cam0", "default_cam1", "default_cam2", "default_cam3", "default_cam4", "default_cam5", "default_cam6", "default_cam7"]);
+  const [camIdList, setCamIdList] = useState<string[]>(["default_lubuntu-x299e", "linanw-cnc_cam0", "linanw-cnc_cam6", "linanw-cnc_cam7", "default_cam0", "default_cam1", "default_cam2", "default_cam3", "default_cam4", "default_cam5", "default_cam6", "default_cam7"]);
   const [currentTimeoutId, setCurrentTimeoutId] = useState<number>(0);
 
   const joinSession = async () => {
