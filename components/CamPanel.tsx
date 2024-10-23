@@ -18,11 +18,12 @@ export const CamPanel = (props: {
     camId: string,
     mode?: VideoPanelMode,
     className?: string,
+    style?: React.CSSProperties,
     onControlCommand?: () => void,
 }) => {
     const client = props.videoClient;
     const videoContainerRef = useRef<HTMLDivElement>(null);
-    const [mode, setMode] = useState<VideoPanelMode>(props.mode ?? VideoPanelMode.Stream);
+    const [mode, setMode] = useState<VideoPanelMode>(props.mode ?? VideoPanelMode.Static);
     const [userId, setUserId] = useState<number>(0);
     useEffect(() => {
         console.log("###############*************useEffect, camId", props.camId);
@@ -73,19 +74,14 @@ export const CamPanel = (props: {
         }
         );
     }, [props.camId]);
-
-    // console.log("******* videoPlayer", videoPlayer);
-    // console.log("******* videoContainerRef.current", videoContainerRef.current);
-    // videoPlayer && videoContainerRef.current?.appendChild(videoPlayer);
     const isVideoAttached = (videoContainerRef.current != undefined && videoContainerRef.current.children.length > 0);
-    // !isVideoAttached && userId != 0 && setUserId(0);
     console.log("******* videoContainerRef.current", videoContainerRef.current?.children.length, isVideoAttached, userId);
 
     return (
-        <div className="cam-panal-container">
-            {/* Stream */}
+        <div className="cam-panal-container" style={props.style}>
+            {/* Live */}
             <div ref={videoContainerRef} hidden={!(mode == VideoPanelMode.Stream && isVideoAttached)} />
-            <img style={{ width: '100%', height: '100%', }} src="https://thumbs.dreamstime.com/b/connection-concept-glitch-noise-distortion-connection-concept-glitch-noise-distortion-k-video-191192846.jpg" alt="no signal" hidden={!(mode == VideoPanelMode.Stream && !isVideoAttached)} />
+            <img  src="https://thumbs.dreamstime.com/b/connection-concept-glitch-noise-distortion-connection-concept-glitch-noise-distortion-k-video-191192846.jpg" alt="no signal" hidden={!(mode == VideoPanelMode.Stream && !isVideoAttached)} />
             {/* <img style={{ width: '100%', height: '100%', }} src="https://www.shutterstock.com/image-illustration/3d-rendering-no-signal-text-260nw-2434845591.jpg" alt="no signal" hidden={!(mode == VideoPanelMode.Stream && !isVideoAttached)} /> */}
             {/* <img style={{ width: '100%', height: '100%', }} src="https://www.shutterstock.com/image-illustration/tv-background-error-design-video-260nw-2052395315.jpg" alt="no signal" hidden={!(mode == VideoPanelMode.Stream && !isVideoAttached)}/> */}
 
@@ -94,7 +90,7 @@ export const CamPanel = (props: {
             <Timelapse camId={""} hidden={!(mode == VideoPanelMode.Timelapse)} />
 
             {/* Static */}
-            <img style={{ width: '100%', height: '100%', }} src="https://res.cloudinary.com/dn9rloq0x/image/upload/h_360/v1729332612/1729332601_2024-10-19_18-10-01.jpg" alt="static" hidden={!(mode == VideoPanelMode.Static)} />
+            <img  src="https://res.cloudinary.com/dn9rloq0x/image/upload/h_360/v1729332612/1729332601_2024-10-19_18-10-01.jpg" alt="static" hidden={!(mode == VideoPanelMode.Static)} />
 
             {/* Control */}
             <div className="top-right text-shadow">

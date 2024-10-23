@@ -103,7 +103,7 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
 
     return (<div className="container" hidden={props.hidden ?? false}>
         {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
-        <img
+        <img className="timelapse"
             draggable="false"
             onContextMenu={(event) => {
                 event.preventDefault();
