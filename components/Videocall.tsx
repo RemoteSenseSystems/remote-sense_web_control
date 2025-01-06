@@ -36,7 +36,7 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
 
   const joinSession = async () => {
     console.log("joinSession");
-    await client.current.init("en-US", "Global", { patchJsMedia: true });//enforceMultipleVideos: { disableRenderLimits: true } }); 
+    await client.current.init("en-US", "Global", { patchJsMedia: true, enforceMultipleVideos: { disableRenderLimits: true } }); 
     const result: any = await client.current.join(session_name, jwt, userName, "0000").catch((e) => {
       console.log("***" + JSON.stringify(e) + "***");
     });

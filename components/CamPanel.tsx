@@ -121,7 +121,7 @@ export const CamPanel = (props: {
 
     useEffect(() => {
         console.log("###############*************useEffect2, userId", userId);
-        if (userId > 0 && !isVideoAttached && isVisible) {
+        if (userId > 0 && !isVideoAttached){ // && isVisible) { // linanw: old code to detach video when not visible, but buggy.
             attachVideo();
             if (!isVideoAttached) setIsVideoAttached(true);
         } else {
