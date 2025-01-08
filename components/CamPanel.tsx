@@ -57,7 +57,7 @@ export const CamPanel = (props: {
 
         const scrollEndHandler = (event: Event) => {
             console.log("***********set Rect on", event.type, rectChanged);
-            setRectChanged(rectRef.current+1);
+            setRectChanged(rectRef.current + 1);
         };
 
         document.addEventListener("scrollend", scrollEndHandler);
@@ -67,7 +67,7 @@ export const CamPanel = (props: {
         if (element && element.parentElement) {
             resizeObserver = new ResizeObserver(() => {
                 console.log("***********set Rect on resize", rectChanged);
-                setRectChanged(rectRef.current+1);
+                setRectChanged(rectRef.current + 1);
             });
             resizeObserver.observe(element.parentElement);
             console.log("$$$$$$$$***********observer set", element.parentElement);
@@ -87,7 +87,7 @@ export const CamPanel = (props: {
     const attachVideo = async () => {
         console.log("**************attaching", userId);
         const mediaStream = client.current.getMediaStream();
-        const result = await mediaStream.attachVideo(userId, VideoQuality.Video_360P);
+        const result = await mediaStream.attachVideo(userId, VideoQuality.Video_360P); // linanw: set 360 but the actual first video quality is 720p
         const videoPlayer = result as VideoPlayer;
         if (videoContainerRef.current) {
             var tempList: Element[] = [];
@@ -121,7 +121,7 @@ export const CamPanel = (props: {
 
     useEffect(() => {
         console.log("###############*************useEffect2, userId", userId);
-        if (userId > 0 && !isVideoAttached){ // && isVisible) { // linanw: old code to detach video when not visible, but buggy.
+        if (userId > 0 && !isVideoAttached) { // && isVisible) { // linanw: old code to detach video when not visible, but buggy.
             attachVideo();
             if (!isVideoAttached) setIsVideoAttached(true);
         } else {
@@ -144,12 +144,12 @@ export const CamPanel = (props: {
                 : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
         };
 
-            const isVisible_ = elementIsVisibleInViewport(myRef.current!.getBoundingClientRect(), true)
-            if (isVisible_ != isVisible) setIsVisible(isVisible_);
+        const isVisible_ = elementIsVisibleInViewport(myRef.current!.getBoundingClientRect(), true)
+        if (isVisible_ != isVisible) setIsVisible(isVisible_);
     }, [rectChanged]);
 
     useEffect(() => {
-        setRectChanged(rectRef.current+1);
+        setRectChanged(rectRef.current + 1);
     }, [props.page]);
 
     if (userId == 0) {
@@ -188,6 +188,24 @@ export const CamPanel = (props: {
 
             {/* Control */}
             <div className="top-right text-shadow">
+                <button onClick={() => {
+                    const context = new AudioContext();
+                    context.resume();
+                    context.state === "running" ? console.log("audio context running") :
+                        context.state === "suspended" ? console.log("audio context suspended") :
+                            context.state === "closed" ? console.log("audio context closed") :
+                                console.log("audio context unknown");
+                    console.log("audio context resumed");
+                    const stream = client.current.getMediaStream()
+                    stream.startAudio({
+                        originalSound: {
+                            stereo: true,
+                            hifi: true,
+                        }, speakerOnly: true,
+                    });
+                    stream.unmuteAllAudio();
+                    stream.unmuteAllUserAudioLocally();
+                }}><p className={mode != VideoPanelMode.Stream ? "text-shadow" : "red-glow"}>Audio</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Stream)}><p className={mode != VideoPanelMode.Stream ? "text-shadow" : "red-glow"}>Live</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Static)}><p className={mode != VideoPanelMode.Static ? "text-shadow" : "yellow-glow"}>Snapshot</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Timelapse)}><p className={mode != VideoPanelMode.Timelapse ? "text-shadow" : "yellow-glow"}>Timelapse</p></button><br />
