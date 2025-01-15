@@ -28,8 +28,15 @@ export const CamPanel = (props: {
     const [isVideoAttached, setIsVideoAttached] = useState(false);
     const [rectChanged, setRectChanged] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
+    const [isPTZStarted, setIsPTZStarted] = useState(false);
+    const [ptzStartX, setPTZStartX] = useState(0);
+    const [ptzPan, setPTZPan] = useState(0);
     const myRef = useRef<HTMLDivElement>(null);
     const rectRef = useRef(rectChanged);
+
+    const sendCommand = async (command: string) => {
+        await client.current.getCommandClient().send(command);
+      }
 
     useEffect(() => {
         console.log("###############*************useEffect, camId", props.camId);
@@ -170,7 +177,21 @@ export const CamPanel = (props: {
     const currentRect = myRef.current?.getBoundingClientRect();
 
     return (
-        <div className="cam-panal-container" style={props.style} id="myself" ref={myRef}>
+        <div className="cam-panal-container" style={props.style} id="myself" ref={myRef} role="presentation"
+            onMouseUp={() => {
+                if (isPTZStarted) {
+                    console.log("%%%%%%%%%%##Send PTZ Command: ", ptzPan);
+                    setIsPTZStarted(false);
+                    setPTZPan(0);
+                    setPTZStartX(0);
+                    sendCommand(`#ch_ptz pan ${ptzPan * 10}`);
+                }
+            }}
+            onMouseMove={(e) => {
+                if (isPTZStarted) {
+                    setPTZPan(e.clientX - ptzStartX);
+                }
+            }}>
             {/* Live */}
             <div ref={videoContainerRef} hidden={!(mode == VideoPanelMode.Stream && isVideoAttached)} style={{ width: '100%', height: '100%' }} />
             {/* <img src="https://thumbs.dreamstime.com/b/connection-concept-glitch-noise-distortion-connection-concept-glitch-noise-distortion-k-video-191192846.jpg" alt="no signal" hidden={!(mode == VideoPanelMode.Stream && !isVideoAttached)} /> */}
@@ -220,6 +241,21 @@ export const CamPanel = (props: {
                 }}><p className={mode != VideoPanelMode.Timelapse ? "text-shadow" : "yellow-glow"}>Fullscreen</p></button>
             </div>
 
+            {/* PTZ */}
+            <div className="bottom-center text-shadow">
+                <button
+                    onMouseDown={(e) => {
+                        setPTZStartX(e.clientX);
+                        setIsPTZStarted(true);
+                    }}
+                // onMouseUp={() => {
+                //     if (isPTZStarted) {
+                //         console.log("%%%%%%%%%%##Send PTZ Command");
+                //         setIsPTZStarted(false);
+                //     }
+                // }}
+                ><p>PTZ:{ptzPan}</p></button>
+            </div>
 
             {/* Label */}
             <div className="bottom-right text-shadow">t:{currentRect?.top} b:{currentRect?.bottom} {props.camId} {userId} {isVideoAttached ? "attached" : "detached"}</div>

@@ -106,6 +106,15 @@ video-player {
     right: 16px;
 }
 
+/* bottom mid text */
+.bottom-center {
+    position: absolute;
+    left: 30%;
+    bottom: 0px;
+    height: 30px;
+    background-color: yellow;
+}
+
 /* Bottom right text */
 .bottom-right {
     position: absolute;
