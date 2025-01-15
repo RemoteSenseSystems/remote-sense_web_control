@@ -32,7 +32,8 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
         myHeaders.append("Content-Type", "application/json");
 
         const raw = JSON.stringify({
-            "expression": "resource_type=image AND uploaded_at>24h AND asset_folder=timelapse AND type=upload",
+            // "expression": "resource_type=image AND uploaded_at>24h AND asset_folder=timelapse AND type=upload",
+            "expression": "resource_type=image AND asset_folder=timelapse AND type=upload",
             "sort_by": [
                 {
                     "created_at": "desc"
