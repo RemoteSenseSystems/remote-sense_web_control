@@ -9,8 +9,8 @@ import { Button } from "@nextui-org/button";
 import { COI } from "./coi";
 import { CamPanel, VideoPanelMode } from "./CamPanel";
 
-const maxNumberOfCamPanels = 8;
-const maxZoomMultiplier = 3;
+const maxNumberOfCamPanels = 10;
+const maxZoomMultiplier = 5;
 
 // linanw, use "async" here will have error.
 const Videocall = (props: { session_name: string; JWT: string }) => {
