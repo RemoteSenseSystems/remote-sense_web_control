@@ -12,6 +12,10 @@ export enum VideoPanelMode {
     Static = 'static',
 }
 
+const ptzThreshold = 10;
+const ptzPanMax = 90;
+const ptzTiltMax = 90;
+
 export const CamPanel = (props: {
     videoClient: MutableRefObject<typeof VideoClient>,
     camId: string,
@@ -30,13 +34,15 @@ export const CamPanel = (props: {
     const [isVisible, setIsVisible] = useState(false);
     const [isPTZStarted, setIsPTZStarted] = useState(false);
     const [ptzStartX, setPTZStartX] = useState(0);
+    const [ptzStartY, setPTZStartY] = useState(0);
     const [ptzPan, setPTZPan] = useState(0);
+    const [ptzTilt, setPTZTilt] = useState(0);
     const myRef = useRef<HTMLDivElement>(null);
     const rectRef = useRef(rectChanged);
 
     const sendCommand = async (command: string) => {
-        await client.current.getCommandClient().send(command);
-      }
+        await client.current.getCommandClient().send(command, userId);
+    }
 
     useEffect(() => {
         console.log("###############*************useEffect, camId", props.camId);
@@ -128,14 +134,13 @@ export const CamPanel = (props: {
 
     useEffect(() => {
         console.log("###############*************useEffect2, userId", userId);
-        if (userId > 0 && !isVideoAttached) { // && isVisible) { // linanw: old code to detach video when not visible, but buggy.
+        detachVideo();
+        if (isVideoAttached) setIsVideoAttached(false);
+        if (userId > 0) { // && isVisible) { // linanw: old code to detach video when not visible, but buggy.
             attachVideo();
             if (!isVideoAttached) setIsVideoAttached(true);
-        } else {
-            detachVideo();
-            if (isVideoAttached) setIsVideoAttached(false);
         }
-    }, [userId, isVisible]);
+    }, [userId]); //isVisible
 
     useEffect(() => {
         const elementIsVisibleInViewport = (rect: DOMRect, partiallyVisible = false) => {
@@ -178,18 +183,42 @@ export const CamPanel = (props: {
 
     return (
         <div className="cam-panal-container" style={props.style} id="myself" ref={myRef} role="presentation"
+        onMouseDown={(e) => {
+            setPTZStartX(e.clientX);
+            setPTZStartY(e.clientY);
+            setIsPTZStarted(true);
+        }}
             onMouseUp={() => {
                 if (isPTZStarted) {
-                    console.log("%%%%%%%%%%##Send PTZ Command: ", ptzPan);
+                    sendCommand(`#ch_ptz pan ${ptzPan * 10} tilt ${ptzTilt * 10}`);
                     setIsPTZStarted(false);
                     setPTZPan(0);
                     setPTZStartX(0);
-                    sendCommand(`#ch_ptz pan ${ptzPan * 10}`);
+                    setPTZTilt(0);
+                    setPTZStartY(0);
                 }
             }}
             onMouseMove={(e) => {
                 if (isPTZStarted) {
-                    setPTZPan(e.clientX - ptzStartX);
+                    var pan = e.clientX - ptzStartX;
+                    var tilt = e.clientY - ptzStartY;
+                    Math.abs(pan) >= ptzThreshold? pan > 0? pan -= ptzThreshold: pan+=ptzThreshold: pan = 0;
+                    Math.abs(tilt) >= ptzThreshold? tilt > 0? tilt -= ptzThreshold: tilt+=ptzThreshold: tilt = 0;
+                    pan = Math.floor(pan / 2);
+                    tilt = Math.floor(tilt /1.5);
+                    pan > ptzPanMax? pan = ptzPanMax: pan < -ptzPanMax? pan = -ptzPanMax: pan;
+                    tilt > ptzTiltMax? tilt = ptzTiltMax: tilt < -ptzTiltMax? tilt = -ptzTiltMax: tilt;
+                    setPTZPan(pan);
+                    setPTZTilt(tilt);
+                }
+            }}
+            onMouseLeave={() => {
+                if (isPTZStarted) {
+                    setIsPTZStarted(false);
+                    setPTZPan(0);
+                    setPTZStartX(0);
+                    setPTZTilt(0);
+                    setPTZStartY(0);
                 }
             }}>
             {/* Live */}
@@ -208,7 +237,10 @@ export const CamPanel = (props: {
             <img src="https://res.cloudinary.com/dn9rloq0x/image/upload/h_360/v1729332612/1729332601_2024-10-19_18-10-01.jpg" alt="static" hidden={!(mode == VideoPanelMode.Static)} />
 
             {/* Control */}
-            <div className="top-right text-shadow">
+            <div className="top-right text-shadow" role="presentation"
+                onMouseDown={(e) => {
+                    e.stopPropagation();
+                }}>
                 <button onClick={() => {
                     const context = new AudioContext();
                     context.resume();
@@ -226,7 +258,7 @@ export const CamPanel = (props: {
                     });
                     stream.unmuteAllAudio();
                     stream.unmuteAllUserAudioLocally();
-                }}><p className={mode != VideoPanelMode.Stream ? "text-shadow" : "red-glow"}>Audio</p></button><br />
+                }}><p className={"red-glow"}>Audio</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Stream)}><p className={mode != VideoPanelMode.Stream ? "text-shadow" : "red-glow"}>Live</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Static)}><p className={mode != VideoPanelMode.Static ? "text-shadow" : "yellow-glow"}>Snapshot</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Timelapse)}><p className={mode != VideoPanelMode.Timelapse ? "text-shadow" : "yellow-glow"}>Timelapse</p></button><br />
@@ -238,24 +270,14 @@ export const CamPanel = (props: {
                             document.documentElement.requestFullscreen();
                         }
                     }
-                }}><p className={mode != VideoPanelMode.Timelapse ? "text-shadow" : "yellow-glow"}>Fullscreen</p></button>
+                }}><p className={"text-shadow"}>Fullscreen</p></button>
             </div>
 
-            {/* PTZ */}
-            <div className="bottom-center text-shadow">
-                <button
-                    onMouseDown={(e) => {
-                        setPTZStartX(e.clientX);
-                        setIsPTZStarted(true);
-                    }}
-                // onMouseUp={() => {
-                //     if (isPTZStarted) {
-                //         console.log("%%%%%%%%%%##Send PTZ Command");
-                //         setIsPTZStarted(false);
-                //     }
-                // }}
-                ><p>PTZ:{ptzPan}</p></button>
-            </div>
+            {/* PTZ Arrows */}
+            <div className="arrow-box-left text-shadow" hidden={ptzPan > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="left" className="arrow-left" />{ptzPan==0?"":ptzPan}</div>
+            <div className="arrow-box-right text-shadow" hidden={ptzPan < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzPan==0?"":ptzPan}<img src="/arrow.png" alt="right" className="arrow-right" /></div>
+            <div className="arrow-box-up text-shadow" hidden={ptzTilt > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="up" className="arrow-up" />{ptzTilt==0?"":ptzTilt}</div>
+            <div className="arrow-box-down text-shadow" hidden={ptzTilt < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzTilt==0?"":ptzTilt}<img src="/arrow.png" alt="down" className="arrow-down" /></div>
 
             {/* Label */}
             <div className="bottom-right text-shadow">t:{currentRect?.top} b:{currentRect?.bottom} {props.camId} {userId} {isVideoAttached ? "attached" : "detached"}</div>

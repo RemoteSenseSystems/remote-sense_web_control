@@ -43,6 +43,9 @@ video-player-container {
 .cam-panal-container {
     position: relative;
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     border: 1px solid rgb(0, 0, 0);
     height: 350px;
     aspect-ratio: 16/9;
@@ -111,8 +114,11 @@ video-player {
     position: absolute;
     left: 30%;
     bottom: 0px;
-    height: 30px;
-    background-color: yellow;
+    width: 50px;
+    height: 50px;
+    background: url('/steel-w.png');
+    background-repeat: no-repeat;
+    background-size: 50px 50px;
 }
 
 /* Bottom right text */
@@ -144,3 +150,55 @@ background-img {
     min-height: 100%;
     z-index: -1;
 } */
+
+.arrow-box-left {
+    position: absolute;
+    height: 50px;
+    left: 10%;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+}
+
+.arrow-left {
+    transform: rotate(180deg);
+    width: 50px;
+    display: inline;
+}
+
+.arrow-box-right {
+    position: absolute;
+    height: 50px;
+    right: 10%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+}
+
+.arrow-right {
+    width: 50px;
+    display: inline;
+}
+
+
+.arrow-box-up {
+    position: absolute;
+    top: 10%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+}
+
+.arrow-up {
+    transform: rotate(-90deg);
+    width: 50px;
+}
+
+.arrow-box-down {
+    position: absolute;
+    bottom: 10%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+}
+
+.arrow-down {
+    transform: rotate(90deg);
+    width: 50px;
+}
