@@ -146,9 +146,9 @@ export const CamPanel = (props: {
     }
 
     return (
-        <div className="cam-panal-container" style={{height: props.height}} id={"cam-panal-container_" + props.camId} ref={myRef} role="presentation"
+        <div className="cam-panal-container" style={{ height: props.height }} id={"cam-panal-container_" + props.camId} ref={myRef} role="presentation"
             onMouseDown={(e) => {
-                if(e.button > 0) return;
+                if (e.button > 0) return;
                 document.getElementsByTagName("body")[0].style.cursor = "none";
                 setPTZStartX(e.clientX);
                 setPTZStartY(e.clientY);
@@ -254,10 +254,10 @@ export const CamPanel = (props: {
             </div>
 
             {/* PTZ Arrows */}
-            <div className="arrow-box-left text-shadow" hidden={ptzPan > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="left" className="arrow-left" />{ptzPan == 0 ? "" : ptzPan}</div>
-            <div className="arrow-box-right text-shadow" hidden={ptzPan < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzPan == 0 ? "" : ptzPan}<img src="/arrow.png" alt="right" className="arrow-right" /></div>
-            <div className="arrow-box-up text-shadow" hidden={ptzTilt > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="up" className="arrow-up" />{ptzTilt == 0 ? "" : ptzTilt}</div>
-            <div className="arrow-box-down text-shadow" hidden={ptzTilt < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzTilt == 0 ? "" : ptzTilt}<img src="/arrow.png" alt="down" className="arrow-down" /></div>
+            <div className="arrow-box-left text-shadow" hidden={ptzPan > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="left" className="arrow-left" draggable={false} />{ptzPan == 0 ? "" : ptzPan}</div>
+            <div className="arrow-box-right text-shadow" hidden={ptzPan < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzPan == 0 ? "" : ptzPan}<img src="/arrow.png" alt="right" className="arrow-right" draggable={false} /></div>
+            <div className="arrow-box-up text-shadow" hidden={ptzTilt > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="up" className="arrow-up" draggable={false} />{ptzTilt == 0 ? "" : ptzTilt}</div>
+            <div className="arrow-box-down text-shadow" hidden={ptzTilt < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzTilt == 0 ? "" : ptzTilt}<img src="/arrow.png" alt="down" className="arrow-down" draggable={false} /></div>
             <div id={"ptzVerticallLine_" + props.camId} className="ptz-vertical-line" hidden={!isPTZStarted}></div>
             <div id={"ptzHorizontalLine_" + props.camId} className="ptz-horizontal-line" hidden={!isPTZStarted}></div>
 
