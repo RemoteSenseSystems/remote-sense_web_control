@@ -144,6 +144,10 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
       setWindowSizeChanged(windowSizeChangedRef.current + 1);
     });
 
+    window.addEventListener("beforeunload", () => {
+      client.current.leave();
+    });
+
     session || joinSession();
 
     return () => {
