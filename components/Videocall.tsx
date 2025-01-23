@@ -4,9 +4,9 @@ import { CSSProperties, use, useEffect, useRef, useState } from "react";
 import ZoomVideo, {
   type VideoClient,
 } from "@zoom/videosdk";
-import { FileX2, PhoneOff } from "lucide-react";
-import { Button } from "@nextui-org/button";
-import { COI } from "./coi";
+// import { FileX2, PhoneOff } from "lucide-react";
+// import { Button } from "@nextui-org/button";
+// import { COI } from "./coi";
 import { CamPanel, VideoPanelMode } from "./CamPanel";
 
 const maxNumberOfCamPanels = 8; // linanw: there will be render issue in fullscreen when camPanel number is greater than 8.
@@ -26,15 +26,16 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
   // const [canvasOffset, setCanvasOffset] = useState(0);
   const [justifyContent, setJustifyContent] = useState("");
   const [page, setPage] = useState(0);
-  const [windowSizeChanged, setWindowSizeChanged] = useState(0);
+  const [viewportChanged, setViewportChanged] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   const videoPlayerContainer = useRef<HTMLDivElement>(null);
   const zoomMultiplierRef = useRef(zoomMultiplier);
   const pageRef = useRef(page);
-  const windowSizeChangedRef = useRef(windowSizeChanged);
+  const windowSizeChangedRef = useRef(viewportChanged);
   zoomMultiplierRef.current = zoomMultiplier;
   pageRef.current = page;
-  windowSizeChangedRef.current = windowSizeChanged;
+  windowSizeChangedRef.current = viewportChanged;
 
   const joinSession = async () => {
     await client.current.init("en-US", "Global", { patchJsMedia: true, enforceMultipleVideos: { disableRenderLimits: true } });
@@ -44,15 +45,24 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
     setSession(result);
   };
 
-  const sendCommand = async (command: string) => {
-    await client.current.getCommandClient().send(command);
-  }
+  // const sendCommand = async (command: string) => {
+  //   await client.current.getCommandClient().send(command);
+  // }
 
-  const leaveSession = async () => {
-    await client.current.leave().catch((e) => console.log("leave error", e));
-    // hard refresh to clear the state
-    // window.location.href = "/";
-  };
+  // const leaveSession = async () => {
+  //   await client.current.leave().catch((e) => console.log("leave error", e));
+  //   // hard refresh to clear the state
+  //   // window.location.href = "/";
+  // };
+
+  useEffect(() => {
+    const isMobile_ = navigator.userAgent.match(/(iPad)|(iPhone)|(iPod)|(android)|(webOS)/i) != null;
+    if (isMobile != isMobile_) setIsMobile(isMobile_);
+  });
+
+  useEffect(() => {
+    document.body.style.overflow = isMobile ? "auto" : "hidden";
+  }, [isMobile]);
 
   useEffect(() => {
     const shuffle = (array: string[]) => {
@@ -140,8 +150,12 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
       }
     }
 
-    window.addEventListener("resize", ()=>{
-      setWindowSizeChanged(windowSizeChangedRef.current + 1);
+    document.body.addEventListener("touchmove", () => {
+      setTimeout(() => setViewportChanged(windowSizeChangedRef.current + 1), 1000);
+    });
+
+    window.addEventListener("resize", () => {
+      setViewportChanged(windowSizeChangedRef.current + 1);
     });
 
     window.addEventListener("beforeunload", () => {
@@ -161,7 +175,7 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
     const element = document.getElementById("video-player-container");
     if (justifyContent == "start"
       && zoomMultiplier == 1
-      && window.innerWidth / window.innerHeight > 2 && window.innerWidth < window.innerHeight /9*32 ) {
+      && window.innerWidth / window.innerHeight > 2 && window.innerWidth < window.innerHeight / 9 * 32) {
       element!.style.width = (window.innerHeight * 2) + "px";
       element!.style.margin = "auto";
     }
@@ -169,7 +183,7 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
       element!.style.width = "100%"
     }
 
-  }, [zoomMultiplier, windowSizeChanged]);
+  }, [zoomMultiplier, viewportChanged]);
 
   const _canvasOffset = (page: number) => {
     if (page < 0) return 0;
@@ -193,34 +207,35 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
     return multiplier - 1;
   }
 
-  document.body.style.overflow = "hidden";
-
   return (
     <>
-      <div className="" >
-        {/* <COI className="bottom-right" /> */}
-        {/* <h1 className="text-center text-3xl font-bold mb-4 mt-0 top-left">
+      {/* <div className="" > */}
+      {/* <COI className="bottom-right" /> */}
+      {/* <h1 className="text-center text-3xl font-bold mb-4 mt-0 top-left">
           Session: {session}+
         </h1> */}
-        <div className="flex h-screen flex-col justify-center bg-black" style={{ justifyContent: justifyContent }}>
+      <div className="flex h-screen flex-col justify-center bg-black" style={{ justifyContent: justifyContent }}>
+        {/* @ts-expect-error html component */}
+        <video-player-container id="video-player-container" style={{ top: `${_canvasOffset(pageRef.current)}px` }} ref={videoPlayerContainer}>
+          <div className="flex flex-row  justify-center  flex-wrap" id="b" >
+            {isMobile && <div className="top-box" />}
+            {camIdList.slice(0, maxNumberOfCamPanels).map((camId, index) => (
+              <CamPanel
+                className={"cam-panal-container"}
+                key={index} videoClient={client} mode={suggestedMode} camId={camId} page={page}
+                height={isMobile ? window.innerWidth / 16 * 9 + "px" : zoomMultiplierRef.current === 0 ? `${camPanelDefaultHeight}px` : `${innerHeight / zoomMultiplierRef.current}px`}
+                alwaysAttach={false}
+                justifyContent={justifyContent} // linanw, pass in justifyContent to trigger recalucation of the visibility, when justifyContent changes.
+                viewportChanged={viewportChanged} //
+              />
+            ))}
+          </div>
           {/* @ts-expect-error html component */}
-          <video-player-container id="video-player-container" style={{ top: `${_canvasOffset(page)}px` }} ref={videoPlayerContainer}>
-            <div className="flex flex-row  justify-center  flex-wrap" id="b" >
-              {camIdList.slice(0, maxNumberOfCamPanels).map((camId, index) => (
-                <CamPanel className="cam-panel" key={index} videoClient={client} mode={suggestedMode} camId={camId} page={page}
-                  height={zoomMultiplierRef.current === 0 ? `${camPanelDefaultHeight}px` : `${innerHeight / zoomMultiplierRef.current}px`}
-                  alwaysAttach={false}
-                  // zoomMultiplier={zoomMultiplier}
-                  justifyContent={justifyContent} // linanw, pass in justifyContent to trigger recalucation of the visibility, when justifyContent changes.
-                />
-              ))}
-            </div>
-            {/* @ts-expect-error html component */}
-          </video-player-container>
-        </div>
+        </video-player-container>
+      </div>
 
 
-        <div className="flex w-full flex-col justify-center self-center">
+      {/* <div className="flex w-full flex-col justify-center self-center">
           <div className="mt-4 flex w-[30rem] flex-1 justify-around self-center rounded-md bg-white p-4">
             <Button onClick={leaveSession} title="leave session">
               <PhoneOff />
@@ -230,7 +245,7 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
             </Button>
           </div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 };

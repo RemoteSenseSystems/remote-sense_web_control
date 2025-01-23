@@ -226,3 +226,14 @@ background-img {
 .gray {
     color: gray;
 }
+
+.top-box {
+    width: 100%;
+    height: 60px;
+    background-color: aqua;
+}
+
+.fill {
+    width: 100%;
+    height: 100%
+}

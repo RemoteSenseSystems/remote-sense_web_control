@@ -5,6 +5,7 @@ import {
     VideoQuality,
     type VideoPlayer,
 } from "@zoom/videosdk";
+import { viewport } from "@/app/(default)/layout";
 
 export enum VideoPanelMode {
     Stream = 'stream',
@@ -24,8 +25,8 @@ export const CamPanel = (props: {
     height: string,
     page: number,
     alwaysAttach?: boolean,
-    // zoomMultiplier: number,
     justifyContent: string,
+    viewportChanged: number,
     onControlCommand?: () => void,
 }) => {
     const client = props.videoClient;
@@ -40,12 +41,9 @@ export const CamPanel = (props: {
     const [ptzPan, setPTZPan] = useState(0);
     const [ptzTilt, setPTZTilt] = useState(0);
     const [videoStarts, setVideoStarts] = useState(0);
-    const [windowSizeChanged, setWindowsSizeChanged] = useState(0);
     const myRef = useRef<HTMLDivElement>(null);
     const videoStartsRef = useRef(videoStarts);
     videoStartsRef.current = videoStarts;
-    const windowSizeChangedRef = useRef(windowSizeChanged);
-    windowSizeChangedRef.current = windowSizeChanged;
 
     const sendCommand = async (command: string) => {
         await client.current.getCommandClient().send(command, userId);
@@ -69,9 +67,6 @@ export const CamPanel = (props: {
                 }
             }
         })
-        window.addEventListener("resize", () => {
-            setWindowsSizeChanged(windowSizeChangedRef.current + 1);
-        });
     }, [props.camId]);
 
     const attachVideo = async () => {
@@ -106,11 +101,25 @@ export const CamPanel = (props: {
         }
     }
 
+    const elementIsVisibleInViewport = (rect: DOMRect, partiallyVisible = false) => {
+        const { top, left, bottom, right } = rect;
+        const { innerHeight, innerWidth } = window;
+        return partiallyVisible
+            ? ((top > 0 && top < innerHeight) ||
+                (bottom > 0 && bottom < innerHeight) ||
+                top <= 0 && bottom >= innerHeight) &&
+            ((left > 0 && left < innerWidth) ||
+                (right > 0 && right < innerWidth) ||
+                left <= 0 && right >= innerWidth)
+            : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+    };
+
     useEffect(() => {
         if (userId > 0 && (isVisible || props.alwaysAttach)) { // && isVisible) { // linanw: old code to detach video when not visible, but buggy.
-            // detachVideo();
-            attachVideo();
-            if (!isVideoAttached) setIsVideoAttached(true);
+            if (!isVideoAttached) {
+                attachVideo();
+                setIsVideoAttached(true);
+            }
         } else {
             detachVideo();
             if (isVideoAttached) setIsVideoAttached(false);
@@ -118,23 +127,11 @@ export const CamPanel = (props: {
     }, [userId, videoStarts, isVisible]);
 
     useEffect(() => {
-        const elementIsVisibleInViewport = (rect: DOMRect, partiallyVisible = false) => {
-            const { top, left, bottom, right } = rect;
-            const { innerHeight, innerWidth } = window;
-            return partiallyVisible
-                ? ((top > 0 && top < innerHeight) ||
-                    (bottom > 0 && bottom < innerHeight) ||
-                    top <= 0 && bottom >= innerHeight) &&
-                ((left > 0 && left < innerWidth) ||
-                    (right > 0 && right < innerWidth) ||
-                    left <= 0 && right >= innerWidth)
-                : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
-        };
         const isVisible_ = elementIsVisibleInViewport(myRef.current!.getBoundingClientRect(), true)
         if (isVisible_ != isVisible) {
             setIsVisible(isVisible_);
         }
-    }, [props.page, props.height, windowSizeChanged, props.justifyContent]);
+    }, [props.page, props.height, props.viewportChanged, props.justifyContent]);
 
     if (userId == 0) {
         client.current.getAllUser().forEach((user) => {
@@ -146,7 +143,11 @@ export const CamPanel = (props: {
     }
 
     return (
-        <div className="cam-panal-container" style={{ height: props.height }} id={"cam-panal-container_" + props.camId} ref={myRef} role="presentation"
+        <div className={props.className}
+            style={{ height: props.height }}
+            id={"cam-panal-container_" + props.camId}
+            ref={myRef}
+            role="presentation"
             onMouseDown={(e) => {
                 if (e.button > 0) return;
                 document.getElementsByTagName("body")[0].style.cursor = "none";
@@ -201,7 +202,7 @@ export const CamPanel = (props: {
                 }
             }}>
             {/* Live */}
-            <div ref={videoContainerRef} hidden={!(mode == VideoPanelMode.Stream && isVideoAttached)} style={{ width: '100%', height: '100%' }} />
+            <div className="fill" ref={videoContainerRef} hidden={!(mode == VideoPanelMode.Stream && isVideoAttached)} />
             {/* <img src="https://thumbs.dreamstime.com/b/connection-concept-glitch-noise-distortion-connection-concept-glitch-noise-distortion-k-video-191192846.jpg" alt="no signal" hidden={!(mode == VideoPanelMode.Stream && !isVideoAttached)} /> */}
             {/* <div  hidden={!(mode == VideoPanelMode.Stream && isVideoAttached && !isFullyVisible())} /> */}
 
@@ -263,7 +264,9 @@ export const CamPanel = (props: {
 
             {/* Label */}
             <div className="bottom-right text-shadow">
-                {props.camId} {userId}
+                {props.camId}
+                {/* {userId} */}
+                page: {props.page}
                 <span className={isVideoAttached ? "green" : "gray"}>●</span>
                 <span className={isVisible ? "green" : "gray"}>●</span>
             </div>
