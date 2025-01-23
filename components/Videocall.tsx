@@ -9,38 +9,38 @@ import { Button } from "@nextui-org/button";
 import { COI } from "./coi";
 import { CamPanel, VideoPanelMode } from "./CamPanel";
 
-const maxNumberOfCamPanels = 10;
+const maxNumberOfCamPanels = 8; // linanw: there will be render issue in fullscreen when camPanel number is greater than 8.
 const maxZoomMultiplier = 5;
 
 // linanw, use "async" here will have error.
 const Videocall = (props: { session_name: string; JWT: string }) => {
   const [suggestedMode, setSuggestedMode] = useState(VideoPanelMode.Stream);
   const session_name = props.session_name;
-  console.log("session_name: ", session_name);
   const jwt = props.JWT;
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
   const camPanelDefaultHeight = 360;
   const [session, setSession] = useState(undefined);
-  const [camIdList, setCamIdList] = useState<string[]>(["pty-lct-1_cam0", "pty-lct-1_cam1", "default_cam0", "default_cam1", "default_cam2", "default_cam3",
-    "default_cam4", "default_cam5", "default_cam6", "default_cam7"]);
+  const [camIdList, setCamIdList] = useState<string[]>(["default_cam0", "default_cam1", "default_cam2", "default_cam3", "default_cam4", "default_cam5", "default_cam6", "default_cam7", "pty-lct-1_cam0", "pty-lct-1_cam1"]); //
   const [currentTimeoutId, setCurrentTimeoutId] = useState<number>(0);
   const [zoomMultiplier, setZoomMultiplier] = useState(0);
-  const [canvasOffset, setCanvasOffset] = useState(0);
+  // const [canvasOffset, setCanvasOffset] = useState(0);
+  const [justifyContent, setJustifyContent] = useState("");
   const [page, setPage] = useState(0);
+  const [windowSizeChanged, setWindowSizeChanged] = useState(0);
 
   const videoPlayerContainer = useRef<HTMLDivElement>(null);
   const zoomMultiplierRef = useRef(zoomMultiplier);
   const pageRef = useRef(page);
+  const windowSizeChangedRef = useRef(windowSizeChanged);
   zoomMultiplierRef.current = zoomMultiplier;
   pageRef.current = page;
+  windowSizeChangedRef.current = windowSizeChanged;
 
   const joinSession = async () => {
-    console.log("joinSession");
     await client.current.init("en-US", "Global", { patchJsMedia: true, enforceMultipleVideos: { disableRenderLimits: true } });
     const result: any = await client.current.join(session_name, jwt, userName, "0000").catch((e) => {
       console.log("***" + JSON.stringify(e) + "***");
     });
-    result && console.log("######*********** join result: ", result);
     setSession(result);
   };
 
@@ -79,7 +79,6 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
     }, millisTill00);
 
     const keyboardZoomHandler = (event: KeyboardEvent) => {
-      console.log("********* key code: ", event.code);
       const Height = videoPlayerContainer.current?.getBoundingClientRect().height ?? 0;
       const winHeight = window.innerHeight;
       const maxPage = Math.ceil(Height / winHeight) - 1;
@@ -117,52 +116,65 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
     document.removeEventListener('keydown', keyboardZoomHandler);
     document.removeEventListener('wheel', wheelZoomHandler);
 
-    console.log("#####*************effect set listener");
     document.addEventListener('keydown', keyboardZoomHandler);
     document.addEventListener('wheel', wheelZoomHandler, { passive: false });
 
-    const element = document.getElementById("a");
+    const element = document.getElementById("video-player-container");
     var resizeObserver: ResizeObserver;
     if (element) {
-      console.log("**************set resize observer: ", element);
       if (element && element.parentElement) {
         resizeObserver = new ResizeObserver(() => {
           element.parentElement!.scrollTo(0, 0);
           const isFullyVisible = elementIsHeightFitViewport(element);
-          isFullyVisible ? element.parentElement!.style.justifyContent = "center" : element.parentElement!.style.justifyContent = "flex-start";
+          if (isFullyVisible) {
+            setJustifyContent("center");
+            // element.parentElement!.style.justifyContent = "center";
+          }
+          else {
+            setJustifyContent("start");
+            // element.parentElement!.style.justifyContent = "start";
+          }
           setPage(0);
         });
         resizeObserver.observe(element);
       }
     }
 
-    client.current.on('device-change', () => {
-      const stream = client.current.getMediaStream();
-      console.log("*************device changed!", stream.getSpeakerList(), stream.getMicList());
-    
-      // speakers = stream.getSpeakerList()
-      // microphones = stream.getMicList()
-    })
+    window.addEventListener("resize", ()=>{
+      setWindowSizeChanged(windowSizeChangedRef.current + 1);
+    });
 
     session || joinSession();
 
     return () => {
-      console.log("#####*************effect clean up");
       document.removeEventListener('keydown', keyboardZoomHandler);
       document.removeEventListener('wheel', wheelZoomHandler);
       if (element) resizeObserver.unobserve(element);
     }
   }, [props.session_name]);
 
-  useEffect(() => {
-    // const top = videoPlayerContainer.current?.getBoundingClientRect().top ?? 0;
+  useEffect(() => { // linanw, resovle the zoom video sdk rendering bug when video container in specific aspect-ratio.
+    const element = document.getElementById("video-player-container");
+    if (justifyContent == "start"
+      && zoomMultiplier == 1
+      && window.innerWidth / window.innerHeight > 2 && window.innerWidth < window.innerHeight /9*32 ) {
+      element!.style.width = (window.innerHeight * 2) + "px";
+      element!.style.margin = "auto";
+    }
+    else {
+      element!.style.width = "100%"
+    }
+
+  }, [zoomMultiplier, windowSizeChanged]);
+
+  const _canvasOffset = (page: number) => {
+    if (page < 0) return 0;
     const Height = videoPlayerContainer.current?.getBoundingClientRect().height ?? 0;
     const winHeight = window.innerHeight;
     const maxPage = Math.ceil(Height / winHeight);
-    if (page >= 0 && page <= maxPage) {
-      setCanvasOffset(page * - winHeight);
-    }
-  }, [page]);
+    if (page > maxPage) page = maxPage;
+    return page * -winHeight;
+  }
 
   const elementIsHeightFitViewport = (el: HTMLElement) => {
     const height = el.getBoundingClientRect().height;
@@ -177,10 +189,7 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
     return multiplier - 1;
   }
 
-  console.log("zoomMultiplier: ", zoomMultiplier);
-  console.log("zoomMultiplierRef: ", zoomMultiplierRef.current);
   document.body.style.overflow = "hidden";
-  console.log("############ page: ", page, "canvasOffset: ", canvasOffset);
 
   return (
     <>
@@ -189,14 +198,17 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
         {/* <h1 className="text-center text-3xl font-bold mb-4 mt-0 top-left">
           Session: {session}+
         </h1> */}
-        <div className="flex h-screen flex-col justify-center bg-black" >
+        <div className="flex h-screen flex-col justify-center bg-black" style={{ justifyContent: justifyContent }}>
           {/* @ts-expect-error html component */}
-          <video-player-container id="a" style={{ top: `${canvasOffset}px` }} ref={videoPlayerContainer}>
+          <video-player-container id="video-player-container" style={{ top: `${_canvasOffset(page)}px` }} ref={videoPlayerContainer}>
             <div className="flex flex-row  justify-center  flex-wrap" id="b" >
               {camIdList.slice(0, maxNumberOfCamPanels).map((camId, index) => (
-                <CamPanel className="cam-panel" key={index} videoClient={client} mode={suggestedMode} camId={camId} page={page} style={{
-                  height: zoomMultiplierRef.current === 0 ? `${camPanelDefaultHeight}px` : `${innerHeight / zoomMultiplierRef.current}px`
-                }} />
+                <CamPanel className="cam-panel" key={index} videoClient={client} mode={suggestedMode} camId={camId} page={page}
+                  height={zoomMultiplierRef.current === 0 ? `${camPanelDefaultHeight}px` : `${innerHeight / zoomMultiplierRef.current}px`}
+                  alwaysAttach={false}
+                  // zoomMultiplier={zoomMultiplier}
+                  justifyContent={justifyContent} // linanw, pass in justifyContent to trigger recalucation of the visibility, when justifyContent changes.
+                />
               ))}
             </div>
             {/* @ts-expect-error html component */}

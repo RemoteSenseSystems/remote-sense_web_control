@@ -1,4 +1,4 @@
-import React, { MutableRefObject, use, useEffect, useRef, useState } from "react";
+import React, { MutableRefObject, useEffect, useRef, useState } from "react";
 import Timelapse from "./Timelapse";
 import {
     VideoClient,
@@ -12,7 +12,7 @@ export enum VideoPanelMode {
     Static = 'static',
 }
 
-const ptzThreshold = 10;
+const ptzThreshold = 5;
 const ptzPanMax = 90;
 const ptzTiltMax = 90;
 
@@ -21,8 +21,11 @@ export const CamPanel = (props: {
     camId: string,
     mode?: VideoPanelMode,
     className?: string,
-    style?: React.CSSProperties,
-    page?: number,
+    height: string,
+    page: number,
+    alwaysAttach?: boolean,
+    // zoomMultiplier: number,
+    justifyContent: string,
     onControlCommand?: () => void,
 }) => {
     const client = props.videoClient;
@@ -30,75 +33,48 @@ export const CamPanel = (props: {
     const [mode, setMode] = useState<VideoPanelMode>(props.mode ?? VideoPanelMode.Static);
     const [userId, setUserId] = useState<number>(0);
     const [isVideoAttached, setIsVideoAttached] = useState(false);
-    const [rectChanged, setRectChanged] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const [isPTZStarted, setIsPTZStarted] = useState(false);
     const [ptzStartX, setPTZStartX] = useState(0);
     const [ptzStartY, setPTZStartY] = useState(0);
     const [ptzPan, setPTZPan] = useState(0);
     const [ptzTilt, setPTZTilt] = useState(0);
+    const [videoStarts, setVideoStarts] = useState(0);
+    const [windowSizeChanged, setWindowsSizeChanged] = useState(0);
     const myRef = useRef<HTMLDivElement>(null);
-    const rectRef = useRef(rectChanged);
+    const videoStartsRef = useRef(videoStarts);
+    videoStartsRef.current = videoStarts;
+    const windowSizeChangedRef = useRef(windowSizeChanged);
+    windowSizeChangedRef.current = windowSizeChanged;
 
     const sendCommand = async (command: string) => {
         await client.current.getCommandClient().send(command, userId);
     }
 
     useEffect(() => {
-        console.log("###############*************useEffect, camId", props.camId);
         client.current.on("peer-video-state-change", async (payload: { action: "Start" | "Stop", userId: number; }) => {
-            // console.log("total users: ", client.current.getAllUser().length);
-            // console.log("peer-video-state-change", payload);
             const action = payload.action;
             const userId_ = payload.userId;
             if (action === "Start") {
                 const camId = client.current.getUser(userId_)?.displayName;
                 if (camId && camId === props.camId) {
-                    console.log("**************video connected", camId, userId_);
-                    setUserId(userId_);
+                    if (userId != userId_) setUserId(userId_);
+                    setVideoStarts(videoStartsRef.current + 1);
                 }
             } else if (action === "Stop") {
                 if (videoContainerRef.current &&
                     videoContainerRef.current.children.length > 0 &&
                     (videoContainerRef.current.children[0].getAttribute("node-id") ?? 0) == userId_) {
-                    console.log("**************video disconnected", userId_);
-                    detachVideo();
                     setUserId(0);
                 }
             }
         })
-
-        const scrollEndHandler = (event: Event) => {
-            console.log("***********set Rect on", event.type, rectChanged);
-            setRectChanged(rectRef.current + 1);
-        };
-
-        document.addEventListener("scrollend", scrollEndHandler);
-
-        const element = document.getElementById('myself');
-        var resizeObserver: ResizeObserver | undefined;
-        if (element && element.parentElement) {
-            resizeObserver = new ResizeObserver(() => {
-                console.log("***********set Rect on resize", rectChanged);
-                setRectChanged(rectRef.current + 1);
-            });
-            resizeObserver.observe(element.parentElement);
-            console.log("$$$$$$$$***********observer set", element.parentElement);
-        } else {
-            console.log("$$$$$$$$***********element not found");
-        }
-
-        return () => {
-            document.removeEventListener("scrollend", scrollEndHandler);
-            if (element && element.parentElement) {
-                resizeObserver?.unobserve(element.parentElement);
-                console.log("$$$$$$$$***********observer unset", element.parentElement);
-            }
-        }
+        window.addEventListener("resize", () => {
+            setWindowsSizeChanged(windowSizeChangedRef.current + 1);
+        });
     }, [props.camId]);
 
     const attachVideo = async () => {
-        console.log("**************attaching", userId);
         const mediaStream = client.current.getMediaStream();
         const result = await mediaStream.attachVideo(userId, VideoQuality.Video_360P); // linanw: set 360 but the actual first video quality is 720p
         const videoPlayer = result as VideoPlayer;
@@ -106,14 +82,12 @@ export const CamPanel = (props: {
             var tempList: Element[] = [];
             for (var i = 0; i < videoContainerRef.current.children.length; i++) {
                 tempList.push(videoContainerRef.current.children[i]);
+                // videoContainerRef.current.children[i].remove();
             }
-            console.log("###################******************tempList: ", tempList.length);
             videoContainerRef.current.appendChild(videoPlayer);
             for (var i = 0; i < tempList.length; i++) {
-                console.log("###################******************removing: ", tempList[i]);
                 tempList[i].remove();
             }
-            console.log("**************attached!!!", userId);
         }
     }
 
@@ -122,25 +96,26 @@ export const CamPanel = (props: {
             videoContainerRef.current.children.length > 0 &&
             (videoContainerRef.current.children[0].getAttribute("node-id") ?? 0) == userId) {
             const mediaStream = client.current.getMediaStream();
-            console.log("**************detaching", userId);
             videoContainerRef.current.children[0].remove();
-            // const element = await mediaStream.detachVideo(userId);
-            // console.log("element: ", element);
-            // Array.isArray(element)
-            //     ? element.forEach((el) => el.remove())
-            //     : element ? element.remove() : null; 
+            const elements = await mediaStream.detachVideo(userId);
+            if (Array.isArray(elements)) {
+                elements.forEach((e) => e.remove());
+            } else {
+                elements.remove();
+            }
         }
     }
 
     useEffect(() => {
-        console.log("###############*************useEffect2, userId", userId);
-        detachVideo();
-        if (isVideoAttached) setIsVideoAttached(false);
-        if (userId > 0) { // && isVisible) { // linanw: old code to detach video when not visible, but buggy.
+        if (userId > 0 && (isVisible || props.alwaysAttach)) { // && isVisible) { // linanw: old code to detach video when not visible, but buggy.
+            // detachVideo();
             attachVideo();
             if (!isVideoAttached) setIsVideoAttached(true);
+        } else {
+            detachVideo();
+            if (isVideoAttached) setIsVideoAttached(false);
         }
-    }, [userId]); //isVisible
+    }, [userId, videoStarts, isVisible]);
 
     useEffect(() => {
         const elementIsVisibleInViewport = (rect: DOMRect, partiallyVisible = false) => {
@@ -155,41 +130,32 @@ export const CamPanel = (props: {
                     left <= 0 && right >= innerWidth)
                 : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
         };
-
         const isVisible_ = elementIsVisibleInViewport(myRef.current!.getBoundingClientRect(), true)
-        if (isVisible_ != isVisible) setIsVisible(isVisible_);
-    }, [rectChanged]);
-
-    useEffect(() => {
-        setRectChanged(rectRef.current + 1);
-    }, [props.page]);
+        if (isVisible_ != isVisible) {
+            setIsVisible(isVisible_);
+        }
+    }, [props.page, props.height, windowSizeChanged, props.justifyContent]);
 
     if (userId == 0) {
         client.current.getAllUser().forEach((user) => {
             const camId = user.displayName;
             if (camId && camId === props.camId) {
-                console.log("**************video bot connected", camId, user.userId);
                 setUserId(user.userId);
             }
         });
     }
 
-    // const isVideoAttached = (videoContainerRef.current != undefined && videoContainerRef.current.children.length > 0);
-    console.log("******* videoContainerRef.current", videoContainerRef.current?.children.length, isVideoAttached, userId);
-    console.log("*********** isAttached", isVideoAttached, userId);
-    console.log("get ############## Rect", userId, myRef.current?.getBoundingClientRect());
-
-    const currentRect = myRef.current?.getBoundingClientRect();
-
     return (
-        <div className="cam-panal-container" style={props.style} id="myself" ref={myRef} role="presentation"
-        onMouseDown={(e) => {
-            setPTZStartX(e.clientX);
-            setPTZStartY(e.clientY);
-            setIsPTZStarted(true);
-        }}
-            onMouseUp={() => {
+        <div className="cam-panal-container" style={{height: props.height}} id={"cam-panal-container_" + props.camId} ref={myRef} role="presentation"
+            onMouseDown={(e) => {
+                document.getElementsByTagName("body")[0].style.cursor = "none";
+                setPTZStartX(e.clientX);
+                setPTZStartY(e.clientY);
+                setIsPTZStarted(true);
+            }}
+            onMouseUp={(e) => {
                 if (isPTZStarted) {
+                    document.getElementsByTagName("body")[0].style.cursor = "auto";
                     sendCommand(`#ch_ptz pan ${ptzPan * 10} tilt ${ptzTilt * 10}`);
                     setIsPTZStarted(false);
                     setPTZPan(0);
@@ -202,18 +168,30 @@ export const CamPanel = (props: {
                 if (isPTZStarted) {
                     var pan = e.clientX - ptzStartX;
                     var tilt = e.clientY - ptzStartY;
-                    Math.abs(pan) >= ptzThreshold? pan > 0? pan -= ptzThreshold: pan+=ptzThreshold: pan = 0;
-                    Math.abs(tilt) >= ptzThreshold? tilt > 0? tilt -= ptzThreshold: tilt+=ptzThreshold: tilt = 0;
+                    Math.abs(pan) >= ptzThreshold ? pan > 0 ? pan -= ptzThreshold : pan += ptzThreshold : pan = 0;
+                    Math.abs(tilt) >= ptzThreshold ? tilt > 0 ? tilt -= ptzThreshold : tilt += ptzThreshold : tilt = 0;
                     pan = Math.floor(pan / 2);
-                    tilt = Math.floor(tilt /1.5);
-                    pan > ptzPanMax? pan = ptzPanMax: pan < -ptzPanMax? pan = -ptzPanMax: pan;
-                    tilt > ptzTiltMax? tilt = ptzTiltMax: tilt < -ptzTiltMax? tilt = -ptzTiltMax: tilt;
+                    tilt = Math.floor(tilt / 1.5);
+                    pan > ptzPanMax ? pan = ptzPanMax : pan < -ptzPanMax ? pan = -ptzPanMax : pan;
+                    tilt > ptzTiltMax ? tilt = ptzTiltMax : tilt < -ptzTiltMax ? tilt = -ptzTiltMax : tilt;
+
+                    const ptzVerticalLine = document.getElementById("ptzVerticallLine_" + props.camId);
+                    const width = ptzVerticalLine?.parentElement?.offsetWidth;
+                    if (ptzVerticalLine) {
+                        ptzVerticalLine.style.transform = `translateX(` + (pan / 60 * (width ?? 0)) + `px)`;
+                    }
+                    const ptzHorizontalLine = document.getElementById("ptzHorizontalLine_" + props.camId);
+                    const height = ptzHorizontalLine?.parentElement?.offsetHeight;
+                    if (ptzHorizontalLine) {
+                        ptzHorizontalLine.style.transform = `translateY(` + (tilt / 35 * (height ?? 0)) + `px)`;
+                    }
                     setPTZPan(pan);
                     setPTZTilt(tilt);
                 }
             }}
-            onMouseLeave={() => {
+            onMouseLeave={(e) => {
                 if (isPTZStarted) {
+                    document.getElementsByTagName("body")[0].style.cursor = "auto";
                     setIsPTZStarted(false);
                     setPTZPan(0);
                     setPTZStartX(0);
@@ -239,6 +217,7 @@ export const CamPanel = (props: {
             {/* Control */}
             <div className="top-right text-shadow" role="presentation"
                 onMouseDown={(e) => {
+                    0
                     e.stopPropagation();
                 }}>
                 <button onClick={() => {
@@ -274,13 +253,19 @@ export const CamPanel = (props: {
             </div>
 
             {/* PTZ Arrows */}
-            <div className="arrow-box-left text-shadow" hidden={ptzPan > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="left" className="arrow-left" />{ptzPan==0?"":ptzPan}</div>
-            <div className="arrow-box-right text-shadow" hidden={ptzPan < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzPan==0?"":ptzPan}<img src="/arrow.png" alt="right" className="arrow-right" /></div>
-            <div className="arrow-box-up text-shadow" hidden={ptzTilt > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="up" className="arrow-up" />{ptzTilt==0?"":ptzTilt}</div>
-            <div className="arrow-box-down text-shadow" hidden={ptzTilt < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzTilt==0?"":ptzTilt}<img src="/arrow.png" alt="down" className="arrow-down" /></div>
+            <div className="arrow-box-left text-shadow" hidden={ptzPan > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="left" className="arrow-left" />{ptzPan == 0 ? "" : ptzPan}</div>
+            <div className="arrow-box-right text-shadow" hidden={ptzPan < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzPan == 0 ? "" : ptzPan}<img src="/arrow.png" alt="right" className="arrow-right" /></div>
+            <div className="arrow-box-up text-shadow" hidden={ptzTilt > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="up" className="arrow-up" />{ptzTilt == 0 ? "" : ptzTilt}</div>
+            <div className="arrow-box-down text-shadow" hidden={ptzTilt < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzTilt == 0 ? "" : ptzTilt}<img src="/arrow.png" alt="down" className="arrow-down" /></div>
+            <div id={"ptzVerticallLine_" + props.camId} className="ptz-vertical-line" hidden={!isPTZStarted}></div>
+            <div id={"ptzHorizontalLine_" + props.camId} className="ptz-horizontal-line" hidden={!isPTZStarted}></div>
 
             {/* Label */}
-            <div className="bottom-right text-shadow">t:{currentRect?.top} b:{currentRect?.bottom} {props.camId} {userId} {isVideoAttached ? "attached" : "detached"}</div>
+            <div className="bottom-right text-shadow">
+                {props.camId} {userId}
+                <span className={isVideoAttached ? "green" : "gray"}>●</span>
+                <span className={isVisible ? "green" : "gray"}>●</span>
+            </div>
         </div>
     );
-}
+}  
