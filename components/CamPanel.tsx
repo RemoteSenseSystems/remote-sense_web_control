@@ -148,6 +148,7 @@ export const CamPanel = (props: {
     return (
         <div className="cam-panal-container" style={{height: props.height}} id={"cam-panal-container_" + props.camId} ref={myRef} role="presentation"
             onMouseDown={(e) => {
+                if(e.button > 0) return;
                 document.getElementsByTagName("body")[0].style.cursor = "none";
                 setPTZStartX(e.clientX);
                 setPTZStartY(e.clientY);
