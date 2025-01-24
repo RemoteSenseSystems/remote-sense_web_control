@@ -58,6 +58,7 @@ export const CamPanel = (props: {
                 if (camId && camId === props.camId) {
                     if (userId != userId_) setUserId(userId_);
                     setVideoStarts(videoStartsRef.current + 1);
+                    setIsVideoAttached(false); // linanw: in case bot reconnect after killed without leave session. 
                 }
             } else if (action === "Stop") {
                 if (videoContainerRef.current &&
@@ -71,15 +72,14 @@ export const CamPanel = (props: {
 
     const attachVideo = async () => {
         const mediaStream = client.current.getMediaStream();
-        const result = await mediaStream.attachVideo(userId, VideoQuality.Video_360P); // linanw: set 360 but the actual first video quality is 720p
-        const videoPlayer = result as VideoPlayer;
         if (videoContainerRef.current) {
             var tempList: Element[] = [];
             for (var i = 0; i < videoContainerRef.current.children.length; i++) {
                 tempList.push(videoContainerRef.current.children[i]);
-                // videoContainerRef.current.children[i].remove();
             }
-            videoContainerRef.current.appendChild(videoPlayer);
+            const result = await mediaStream.attachVideo(userId, VideoQuality.Video_360P); // linanw: set 360 but the actual first video quality is 720p
+            videoContainerRef.current.appendChild(result as VideoPlayer);
+            setIsVideoAttached(true);
             for (var i = 0; i < tempList.length; i++) {
                 tempList[i].remove();
             }
@@ -88,16 +88,10 @@ export const CamPanel = (props: {
 
     const detachVideo = async () => {
         if (videoContainerRef.current &&
-            videoContainerRef.current.children.length > 0 &&
-            (videoContainerRef.current.children[0].getAttribute("node-id") ?? 0) == userId) {
+            videoContainerRef.current.children.length > 0) {
             const mediaStream = client.current.getMediaStream();
-            videoContainerRef.current.children[0].remove();
             const elements = await mediaStream.detachVideo(userId);
-            if (Array.isArray(elements)) {
-                elements.forEach((e) => e.remove());
-            } else {
-                elements.remove();
-            }
+            if (isVideoAttached) setIsVideoAttached(false);
         }
     }
 
@@ -118,11 +112,9 @@ export const CamPanel = (props: {
         if (userId > 0 && (isVisible || props.alwaysAttach)) { // && isVisible) { // linanw: old code to detach video when not visible, but buggy.
             if (!isVideoAttached) {
                 attachVideo();
-                setIsVideoAttached(true);
             }
         } else {
             detachVideo();
-            if (isVideoAttached) setIsVideoAttached(false);
         }
     }, [userId, videoStarts, isVisible]);
 
