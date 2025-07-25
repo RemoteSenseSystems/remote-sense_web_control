@@ -50,6 +50,6 @@ const Snapshot = (props: { hidden?: boolean }) => {
         }
         );
     }
-    return <div hidden={props.hidden}><img src={snapshotUrl} /></div>
+    return <div hidden={props.hidden}><img alt="Snapshot" src={snapshotUrl} /></div>
 }
 export default Snapshot;
