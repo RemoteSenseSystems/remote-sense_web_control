@@ -42,7 +42,7 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             "fields": [
                 "secure_url"
             ],
-            "max_results": 500
+            "max_results": 144 // when interval is 5 minutes, we need at least 144 images to cover 12 hours
         });
 
         const response = await fetch("/cld/v1_1/dn9rloq0x/resources/search", {
