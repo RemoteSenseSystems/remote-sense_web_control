@@ -15,7 +15,7 @@ const maxZoomMultiplier = 5;
 
 // linanw, use "async" here will have error.
 const Videocall = (props: { session_name: string; JWT: string }) => {
-  const [suggestedMode, setSuggestedMode] = useState(VideoPanelMode.Stream);
+  const [suggestedMode, setSuggestedMode] = useState(VideoPanelMode.Static);
   const session_name = props.session_name;
   const jwt = props.JWT;
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
