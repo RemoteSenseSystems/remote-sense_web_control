@@ -5,10 +5,21 @@ import { useEffect, useState } from "react";
 const Snapshot = (props: { hidden?: boolean }) => {
 
     const [snapshotUrl, setSnapshotUrl] = useState("");
+    const [intervalId, setIntervalId] = useState(0);
+    const interval = 1000 * 60 * 1; // 1 minute
 
     useEffect(() => {
-        loadImage();
-    });
+        console.log("useEffect");
+        if (intervalId === 0) {
+            loadImage();
+            console.log("Setting interval for snapshot image loading...");
+            const id = setInterval(() => {
+                console.log("Loading snapshot image...");
+                loadImage();
+            }, interval);
+            setIntervalId(id as unknown as number);
+        }
+    }, [intervalId]);
 
     const loadImage = async () => {
         const myHeaders = new Headers();
@@ -25,7 +36,7 @@ const Snapshot = (props: { hidden?: boolean }) => {
             "fields": [
                 "secure_url"
             ],
-            "max_results": 1 // Get last picture only, for static mode
+            "max_results": 144 // use the same max_results as in Timelapse component, the result is cached in middleware for reuse.
         });
 
         const response = await fetch("/cld/v1_1/dn9rloq0x/resources/search", {
@@ -45,10 +56,8 @@ const Snapshot = (props: { hidden?: boolean }) => {
             console.log("Error:", json.error.message);
             return;
         }
-        json.resources.forEach((element: { secure_url: string; }) => {
-            setSnapshotUrl(element.secure_url);
-        }
-        );
+        const element = json.resources[0];
+        setSnapshotUrl(element.secure_url);
     }
     return <div hidden={props.hidden}><img alt="Snapshot" src={snapshotUrl} /></div>
 }
