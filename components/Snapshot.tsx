@@ -21,6 +21,14 @@ const Snapshot = (props: { hidden?: boolean }) => {
         }
     }, [intervalId]);
 
+    useEffect(() => {
+        console.log("useEffect for hidden prop change");
+        if (!props.hidden) {
+            console.log("Component is visible, loading snapshot image...");
+            loadImage();
+        }
+    }, [props.hidden]);
+
     const loadImage = async () => {
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
