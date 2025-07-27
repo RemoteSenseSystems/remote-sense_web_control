@@ -42,7 +42,7 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             "fields": [
                 "secure_url"
             ],
-            "max_results": 144 // when interval is 5 minutes, we need at least 144 images to cover 12 hours
+            "max_results": (60/5*3+10)*9 // when interval is 5 minutes, we need at least 144 images to cover 12 hours
         });
 
         const response = await fetch("/cld/v1_1/dn9rloq0x/resources/search", {
@@ -64,7 +64,9 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             return;
         }
         json.resources.forEach((element: { secure_url: string; }) => {
-            setImagesList(state => [...state, element.secure_url.replace("image/upload", "image/upload/h_360")]);
+            if (element.secure_url.includes("main") || element.secure_url.includes("cam0_1753")) {
+                setImagesList(state => [...state, element.secure_url.replace("image/upload", "image/upload/h_360")]);
+            }
         }
         );
         setImageFound(json.resources.length);

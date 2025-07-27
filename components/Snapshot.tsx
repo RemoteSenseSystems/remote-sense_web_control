@@ -44,7 +44,7 @@ const Snapshot = (props: { hidden?: boolean }) => {
             "fields": [
                 "secure_url"
             ],
-            "max_results": 144 // use the same max_results as in Timelapse component, the result is cached in middleware for reuse.
+            "max_results": (60/5*3+10)*9 // use the same max_results as in Timelapse component, the result is cached in middleware for reuse.
         });
 
         const response = await fetch("/cld/v1_1/dn9rloq0x/resources/search", {
@@ -64,7 +64,11 @@ const Snapshot = (props: { hidden?: boolean }) => {
             console.log("Error:", json.error.message);
             return;
         }
-        const element = json.resources[0];
+
+        const filtered = json.resources.filter((element: { secure_url: string; }) =>{
+            return element.secure_url.includes("main");
+        });
+        const element = filtered[0];
         setSnapshotUrl(element.secure_url);
     }
     return <div hidden={props.hidden}><img alt="Snapshot" src={snapshotUrl} /></div>
