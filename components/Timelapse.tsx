@@ -8,13 +8,15 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
     const [currentInterval, setCurrentInterval] = useState(0);
     const [requestImageListFailed, setRequestImageListFailed] = useState(false);
     const [imageFound, setImageFound] = useState(0);
-    const [images_list, setImagesList] = useState<string[]>([]);
+    const [imagesList, setImagesList] = useState<string[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [indexOverride, setIndexOverride] = useState(-1);
     const [preloadImageAmout, setPreloadImageAmout] = useState(0);
     const [isPreloading, setIsPreloading] = useState(false);
     const times = props.speedTimes ?? 1000; // default 3000 times faster
     const interval = (1000 * 60 * 5) / times;  // 5 minutes = 1000*60*5, 3000 times faster
+
+    const camAngleNumber = 9; 
 
     const preloadImages = (array: string[]) => {
         for (var i = 0; i < array.length; i++) {
@@ -42,7 +44,7 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             "fields": [
                 "secure_url"
             ],
-            "max_results": (60/5*3+10)*9 // when interval is 5 minutes, we need at least 144 images to cover 12 hours
+            "max_results": (60/5*3+10)* camAngleNumber, // 3 hours, 60 minutes / 5 minutes per image * 3 images per angle + 10 extra images
         });
 
         const response = await fetch("/cld/v1_1/dn9rloq0x/resources/search", {
@@ -77,14 +79,14 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             loadImageList();
         };
 
-        if (!isPreloading && imageFound != 0 && images_list.length == imageFound) {
-            preloadImages(images_list);
+        if (!isPreloading && imageFound != 0 && imagesList.length == imageFound / camAngleNumber) {
+            preloadImages(imagesList);
             setIsPreloading(true);
         }
     }, [imageFound, requestImageListFailed]);
 
     useEffect(() => {
-        if (images_list.length != 0 && preloadImageAmout >= images_list.length * 0.6) {
+        if (imagesList.length != 0 && isImagePreloadEnough()) {
             if (currentIntervalId != 0) {
                 console.log("*********clear interval", currentIntervalId);
                 clearInterval(currentIntervalId);
@@ -92,7 +94,7 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             if (!props.hidden) {
                 console.log("******set interval", interval);
                 const intervalID = setInterval(() => {
-                    setCurrentIndex(state => (state + 1) % images_list.length);
+                    setCurrentIndex(state => (state + 1) % imagesList.length);
                 }, interval);
                 console.log("******set intervalID", intervalID);
                 setCurrentIntervalId(intervalID as unknown as number); // linanw: if here is a type error, please ignore it, it's not valid.
@@ -102,7 +104,7 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
     }, [props.speedTimes, preloadImageAmout, props.hidden]
     );
 
-    const isImagePreloadEnough = () => (preloadImageAmout >= images_list.length * 0.6);
+    const isImagePreloadEnough = () => (preloadImageAmout >= imagesList.length * 0.6);
 
     return (<div className="container" hidden={props.hidden ?? false}>
         {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
@@ -117,10 +119,10 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
                 const screenWidth = window.innerWidth;
                 const touchX = event.touches[0].clientX;
                 const touchControlAreaPercentage = 0.7;
-                var newIndex = Math.floor(((touchX - screenWidth * (1 - touchControlAreaPercentage) / 2) / screenWidth / touchControlAreaPercentage) * images_list.length);
+                var newIndex = Math.floor(((touchX - screenWidth * (1 - touchControlAreaPercentage) / 2) / screenWidth / touchControlAreaPercentage) * imagesList.length);
                 if (newIndex < 0) newIndex = 0;
-                if (newIndex >= images_list.length) newIndex = images_list.length - 1;
-                setIndexOverride(images_list.length - 1 - newIndex);
+                if (newIndex >= imagesList.length) newIndex = imagesList.length - 1;
+                setIndexOverride(imagesList.length - 1 - newIndex);
 
             }}
             onTouchEnd={() => setIndexOverride(-1)}
@@ -129,10 +131,10 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
                 const screenWidth = window.innerWidth;
                 const touchX = event.clientX;
                 const touchControlAreaPercentage = 0.7;
-                var newIndex = Math.floor(((touchX - screenWidth * (1 - touchControlAreaPercentage) / 2) / screenWidth / touchControlAreaPercentage) * images_list.length);
+                var newIndex = Math.floor(((touchX - screenWidth * (1 - touchControlAreaPercentage) / 2) / screenWidth / touchControlAreaPercentage) * imagesList.length);
                 if (newIndex < 0) newIndex = 0;
-                if (newIndex >= images_list.length) newIndex = images_list.length - 1;
-                setIndexOverride(images_list.length - 1 - newIndex);
+                if (newIndex >= imagesList.length) newIndex = imagesList.length - 1;
+                setIndexOverride(imagesList.length - 1 - newIndex);
 
             }}
             onMouseUp={() => setIndexOverride(-1)}
@@ -141,13 +143,13 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             height="100%"
             src={
                 indexOverride != -1
-                    ? images_list[indexOverride]
-                    : isImagePreloadEnough() ? images_list[images_list.length - 1 - currentIndex] : images_list[0]
+                    ? imagesList[indexOverride]
+                    : isImagePreloadEnough() ? imagesList[imagesList.length - 1 - currentIndex] : imagesList[0]
             }
             sizes="100vw"
             alt="Timelapse"
         />
-        <div className="bottom-right"> Image: {imageFound}, Preload: {images_list.length == 0 ? 0 : Math.floor((preloadImageAmout / images_list.length) * 100)}%
+        <div className="top-left text-shadow"> Image: {imageFound}, Preload: {imagesList.length == 0 ? 0 : Math.floor((preloadImageAmout / imagesList.length) * 100)}%
             Speed: {times}x</div></div>)
 }
 
