@@ -215,7 +215,7 @@ export const CamPanel = (props: {
                     0
                     e.stopPropagation();
                 }}>
-                <button onClick={() => {
+                {/* <button onClick={() => {
                     const context = new AudioContext();
                     context.resume();
                     context.state === "running" ? console.log("audio context running") :
@@ -232,7 +232,7 @@ export const CamPanel = (props: {
                     });
                     stream.unmuteAllAudio();
                     stream.unmuteAllUserAudioLocally();
-                }} hidden={true}><p className={"red-glow"}>Audio</p></button><br />
+                }}><p className={"red-glow"}>Audio</p></button><br /> */}
                 <button onClick={() => setMode(VideoPanelMode.Stream)}><p className={mode != VideoPanelMode.Stream ? "text-shadow" : "red-glow"}>Live</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Static)}><p className={mode != VideoPanelMode.Static ? "text-shadow" : "yellow-glow"}>Snapshot</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Timelapse)}><p className={mode != VideoPanelMode.Timelapse ? "text-shadow" : "yellow-glow"}>Timelapse</p></button><br />

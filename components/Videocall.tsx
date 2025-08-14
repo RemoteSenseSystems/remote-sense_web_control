@@ -10,7 +10,7 @@ import ZoomVideo, {
 import { CamPanel, VideoPanelMode } from "./CamPanel";
 
 const safeMaxNumberOfCamPanels = 8; // linanw: there will be render issue in fullscreen when camPanel number is greater than 8.
-const maxNumberOfCamPanels = 18; // linanw: when this mumber bigger than safeMaxNumberOfCamPanels, rendering mothed will be changed.
+const maxNumberOfCamPanels = 25; // linanw: when this mumber bigger than safeMaxNumberOfCamPanels, rendering mothed will be changed.
 const maxZoomMultiplier = 5;
 
 // linanw, use "async" here will have error.
@@ -138,17 +138,6 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
     document.addEventListener('keydown', keyboardZoomHandler);
     document.addEventListener('wheel', wheelZoomHandler, { passive: false });
 
-    // var resizeObserver: ResizeObserver;
-    // if (element) {
-    //   if (element && element.parentElement) {
-    //     resizeObserver = new ResizeObserver(() => {
-    //       element.parentElement!.scrollTo(0, 0);
-
-    //     });
-    //     resizeObserver.observe(element);
-    //   }
-    // }
-
     document.body.addEventListener("touchmove", () => {
       setTimeout(() => setViewportChanged(viewportChangedRef.current + 1), 1000);
     });
@@ -213,9 +202,28 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
       <div className="flex h-screen flex-col justify-center bg-black" style={{ justifyContent: justifyContent }}>
         {/* @ts-expect-error html component */}
         <video-player-container id="video-player-container" style={{ top: `${_canvasOffset(pageRef.current)}px` }} ref={videoPlayerContainer}>
-          <div className="flex flex-row  justify-center  flex-wrap" id="b" >
-            {isMobile && <div className="top-box" />}
-            {!isMobile && Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)) == 0 && zoomMultiplier == 1 ? <div className="cam-panal-container"> Please Expand </div>
+          <div className="flex flex-row  justify-center  flex-wrap bg-black" id="b" >
+            {isMobile && <div className="top-box">
+              <button onClick={() => {
+                                  const context = new AudioContext();
+                                  context.resume();
+                                  context.state === "running" ? console.log("audio context running") :
+                                      context.state === "suspended" ? console.log("audio context suspended") :
+                                          context.state === "closed" ? console.log("audio context closed") :
+                                              console.log("audio context unknown");
+                                  console.log("audio context resumed");
+                                  const stream = client.current.getMediaStream()
+                                  stream.startAudio({
+                                      originalSound: {
+                                          stereo: true,
+                                          hifi: true,
+                                      }, speakerOnly: true,
+                                  });
+                                  stream.unmuteAllAudio();
+                                  stream.unmuteAllUserAudioLocally();
+                              }}><p className={"red-glow"}>Audio</p></button><br />
+              </div>}
+            {!isMobile && Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)) == 0 && zoomMultiplier == 1 && maxNumberOfCamPanels > safeMaxNumberOfCamPanels? <div className="expand-notice">{"<< << << Please Expand The Browser Window Wider >> >> >>"}</div>
               : camIdList.slice(0, maxNumberOfCamPanels).map((camId, index) => (
                 ((zoomMultiplier != 1 || maxNumberOfCamPanels <= safeMaxNumberOfCamPanels || isMobile || Math.abs(Math.floor(index / Math.max(1, Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)))) - page) < 2)) &&
                 <CamPanel
@@ -249,17 +257,5 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
 };
 
 export default Videocall;
-
-const videoPlayerStyle = {
-  backgroundColor: "black",
-  // height: "100vh",
-  // width: "100vw",
-  marginTop: "0rem",
-  marginLeft: "0rem",
-  marginRight: "0rem",
-  alignContent: "center",
-  borderRadius: "0px",
-  overflow: "hidden",
-} as CSSProperties;
 
 const userName = `User-${new Date().getTime().toString().slice(8)}`;
