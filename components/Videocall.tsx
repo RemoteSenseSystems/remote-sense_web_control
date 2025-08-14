@@ -69,7 +69,7 @@ const Videocall = (props: { session_name: string; client_id: string; JWT: string
   });
 
   useEffect(() => {
-    if(props.client_id && props.client_id!=='') setCamIdList([props.client_id]);
+    if (props.client_id && props.client_id !== '') setCamIdList([props.client_id]);
   }, [props.client_id]);
 
   useEffect(() => {
@@ -207,27 +207,8 @@ const Videocall = (props: { session_name: string; client_id: string; JWT: string
         {/* @ts-expect-error html component */}
         <video-player-container id="video-player-container" style={{ top: `${_canvasOffset(pageRef.current)}px` }} ref={videoPlayerContainer}>
           <div className="flex flex-row  justify-center  flex-wrap bg-black" id="b" >
-            {isMobile && <div className="top-box">
-              <button onClick={() => {
-                                  const context = new AudioContext();
-                                  context.resume();
-                                  context.state === "running" ? console.log("audio context running") :
-                                      context.state === "suspended" ? console.log("audio context suspended") :
-                                          context.state === "closed" ? console.log("audio context closed") :
-                                              console.log("audio context unknown");
-                                  console.log("audio context resumed");
-                                  const stream = client.current.getMediaStream()
-                                  stream.startAudio({
-                                      originalSound: {
-                                          stereo: true,
-                                          hifi: true,
-                                      }, speakerOnly: true,
-                                  });
-                                  stream.unmuteAllAudio();
-                                  stream.unmuteAllUserAudioLocally();
-                              }}><p className={"red-glow"}>Audio</p></button><br />
-              </div>}
-            {!isMobile && Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)) == 0 && zoomMultiplier == 1 && maxNumberOfCamPanels > safeMaxNumberOfCamPanels? <div className="expand-notice">{"<< << << Please Expand The Browser Window Wider >> >> >>"}</div>
+            {isMobile && <div className="top-box" />}
+            {!isMobile && Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)) == 0 && zoomMultiplier == 1 && maxNumberOfCamPanels > safeMaxNumberOfCamPanels ? <div className="expand-notice">{"<< << << Please Expand The Browser Window Wider >> >> >>"}</div>
               : camIdList.slice(0, maxNumberOfCamPanels).map((camId, index) => (
                 ((zoomMultiplier != 1 || maxNumberOfCamPanels <= safeMaxNumberOfCamPanels || isMobile || Math.abs(Math.floor(index / Math.max(1, Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)))) - page) < 2)) &&
                 <CamPanel

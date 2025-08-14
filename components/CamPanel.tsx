@@ -50,6 +50,31 @@ export const CamPanel = (props: {
         await client.current.getCommandClient().send(command, userId);
     }
 
+    const enableAudio = () => {
+        console.log("enable audio");
+        const context = new AudioContext();
+        context.resume();
+        context.state === "running" ? console.log("audio context running") :
+            context.state === "suspended" ? console.log("audio context suspended") :
+                context.state === "closed" ? console.log("audio context closed") :
+                    console.log("audio context unknown");
+
+        // unmute zoom audio
+        const stream = client.current.getMediaStream()
+        stream.startAudio({
+            originalSound: {
+                stereo: true,
+                hifi: true,
+            }, speakerOnly: true,
+        });
+        stream.unmuteAllAudio();
+        stream.unmuteAllUserAudioLocally();
+    }
+
+    useEffect(() => {
+        if(isVideoAttached)enableAudio();
+    }, [isVideoAttached]);
+
     useEffect(() => {
         client.current.on("peer-video-state-change", async (payload: { action: "Start" | "Stop", userId: number; }) => {
             const action = payload.action;
@@ -215,24 +240,6 @@ export const CamPanel = (props: {
                     0
                     e.stopPropagation();
                 }}>
-                {/* <button onClick={() => {
-                    const context = new AudioContext();
-                    context.resume();
-                    context.state === "running" ? console.log("audio context running") :
-                        context.state === "suspended" ? console.log("audio context suspended") :
-                            context.state === "closed" ? console.log("audio context closed") :
-                                console.log("audio context unknown");
-                    console.log("audio context resumed");
-                    const stream = client.current.getMediaStream()
-                    stream.startAudio({
-                        originalSound: {
-                            stereo: true,
-                            hifi: true,
-                        }, speakerOnly: true,
-                    });
-                    stream.unmuteAllAudio();
-                    stream.unmuteAllUserAudioLocally();
-                }}><p className={"red-glow"}>Audio</p></button><br /> */}
                 <button onClick={() => setMode(VideoPanelMode.Stream)}><p className={mode != VideoPanelMode.Stream ? "text-shadow" : "red-glow"}>Live</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Static)}><p className={mode != VideoPanelMode.Static ? "text-shadow" : "yellow-glow"}>Snapshot</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Timelapse)}><p className={mode != VideoPanelMode.Timelapse ? "text-shadow" : "yellow-glow"}>Timelapse</p></button><br />
