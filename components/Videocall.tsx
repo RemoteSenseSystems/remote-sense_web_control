@@ -14,14 +14,14 @@ const maxNumberOfCamPanels = 25; // linanw: when this mumber bigger than safeMax
 const maxZoomMultiplier = 5;
 
 // linanw, use "async" here will have error.
-const Videocall = (props: { session_name: string; JWT: string }) => {
+const Videocall = (props: { session_name: string; client_id: string; JWT: string }) => {
   const [suggestedMode, setSuggestedMode] = useState(VideoPanelMode.Static);
   const session_name = props.session_name;
   const jwt = props.JWT;
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
   const camPanelDefaultHeight = 360;
   const [session, setSession] = useState(undefined);
-  const [camIdList, setCamIdList] = useState<string[]>(["pty-portable-1_cam0"]); //
+  const [camIdList, setCamIdList] = useState<string[]>(["pty-portable-1_cam0", "pty-portable-1_cam0"]); //
   const [currentTimeoutId, setCurrentTimeoutId] = useState<number>(0);
   const [zoomMultiplier, setZoomMultiplier] = useState(0);
   // const [canvasOffset, setCanvasOffset] = useState(0);
@@ -67,6 +67,10 @@ const Videocall = (props: { session_name: string; JWT: string }) => {
     const isMobile_ = navigator.userAgent.match(/(iPad)|(iPhone)|(iPod)|(android)|(webOS)/i) != null;
     if (isMobile != isMobile_) setIsMobile(isMobile_);
   });
+
+  useEffect(() => {
+    if(props.client_id && props.client_id!=='') setCamIdList([props.client_id]);
+  }, [props.client_id]);
 
   useEffect(() => {
     document.body.style.overflow = isMobile ? "auto" : "hidden";
