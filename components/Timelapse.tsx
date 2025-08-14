@@ -16,7 +16,14 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
     const times = props.speedTimes ?? 1000; // default 3000 times faster
     const interval = (1000 * 60 * 5) / times;  // 5 minutes = 1000*60*5, 3000 times faster
 
-    const camAngleNumber = 9; 
+    const camAngleAmount = 9;
+    const snapshotInterval = 5; // 5 minutes per image
+    const lookBackHours = 1; // 3 hours of timelapse
+    const extraImages = 0; // extra images to search for
+
+    const maxSearchResults = () => {
+        return (60 / snapshotInterval * lookBackHours + extraImages) * camAngleAmount // 3 hours, 60 minutes / 5 minutes per image * 3 images per angle + 10 extra images
+    }
 
     const preloadImages = (array: string[]) => {
         for (var i = 0; i < array.length; i++) {
@@ -35,6 +42,7 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
 
         const raw = JSON.stringify({
             // "expression": "resource_type=image AND uploaded_at>24h AND asset_folder=timelapse AND type=upload",
+            // cld search resource_type=image AND asset_folder=timelapse AND type=upload AND tags=pty-demo AND public_id='test/*'
             "expression": "resource_type=image AND asset_folder=timelapse AND type=upload",
             "sort_by": [
                 {
@@ -42,9 +50,10 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
                 }
             ],
             "fields": [
-                "secure_url"
+                "secure_url",
+                "tags",
             ],
-            "max_results": (60/5*3+10)* camAngleNumber, // 3 hours, 60 minutes / 5 minutes per image * 3 images per angle + 10 extra images
+            "max_results": maxSearchResults(),
         });
 
         const response = await fetch("/cld/v1_1/dn9rloq0x/resources/search", {
@@ -65,8 +74,8 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             setRequestImageListFailed(true);
             return;
         }
-        json.resources.forEach((element: { secure_url: string; }) => {
-            if (element.secure_url.includes("main") || element.secure_url.includes("cam0_1753")) {
+        json.resources.forEach((element: { secure_url: string; tags: string[] }) => {
+            if (element.tags.includes("pty-demo") || element.secure_url.includes("cam0_1735")) {
                 setImagesList(state => [...state, element.secure_url.replace("image/upload", "image/upload/h_360")]);
             }
         }
@@ -79,7 +88,7 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             loadImageList();
         };
 
-        if (!isPreloading && imageFound != 0 && imagesList.length == imageFound / camAngleNumber) {
+        if (!isPreloading && imageFound != 0 && imageFound > 0) {
             preloadImages(imagesList);
             setIsPreloading(true);
         }
