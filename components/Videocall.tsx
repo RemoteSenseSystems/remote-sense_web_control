@@ -21,7 +21,7 @@ const Videocall = (props: { session_name: string; client_id: string; JWT: string
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
   const camPanelDefaultHeight = 360;
   const [session, setSession] = useState(undefined);
-  const [camIdList, setCamIdList] = useState<string[]>(["pty-portable-1_cam0", "pty-portable-1_cam0"]); //
+  const [edgeCamIdList, setedgeCamIdList] = useState<string[]>(["pty-portable-1_cam0", "pty-portable-1_cam0"]); //
   const [currentTimeoutId, setCurrentTimeoutId] = useState<number>(0);
   const [zoomMultiplier, setZoomMultiplier] = useState(0);
   // const [canvasOffset, setCanvasOffset] = useState(0);
@@ -59,7 +59,7 @@ const Videocall = (props: { session_name: string; client_id: string; JWT: string
   const getMaxPage = (Height: number, winHeight: number) => {
     if (Height == 0) return 0;
     const result = zoomMultiplier != 1 || maxNumberOfCamPanels <= safeMaxNumberOfCamPanels ? Math.ceil(Height / winHeight) - 1
-      : Math.ceil(Math.min(maxNumberOfCamPanels, camIdList.length) / Math.max(1, Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)))) - 1;
+      : Math.ceil(Math.min(maxNumberOfCamPanels, edgeCamIdList.length) / Math.max(1, Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)))) - 1;
     return result;
   };
 
@@ -69,7 +69,7 @@ const Videocall = (props: { session_name: string; client_id: string; JWT: string
   });
 
   useEffect(() => {
-    if (props.client_id && props.client_id !== '') setCamIdList([props.client_id]);
+    if (props.client_id && props.client_id !== '') setedgeCamIdList([props.client_id]);
   }, [props.client_id]);
 
   useEffect(() => {
@@ -85,7 +85,7 @@ const Videocall = (props: { session_name: string; client_id: string; JWT: string
       return array;
     };
 
-    // setCamIdList(shuffle(camIdList));
+    // setedgeCamIdList(shuffle(edgeCamIdList));
 
     // schedule a timer to refresh the page at 00:00
     if (currentTimeoutId !== 0) {
@@ -209,11 +209,11 @@ const Videocall = (props: { session_name: string; client_id: string; JWT: string
           <div className="flex flex-row  justify-center  flex-wrap bg-black" id="b" >
             {isMobile && <div className="top-box" />}
             {!isMobile && Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)) == 0 && zoomMultiplier == 1 && maxNumberOfCamPanels > safeMaxNumberOfCamPanels ? <div className="expand-notice">{"<< << << Please Expand The Browser Window Wider >> >> >>"}</div>
-              : camIdList.slice(0, maxNumberOfCamPanels).map((camId, index) => (
+              : edgeCamIdList.slice(0, maxNumberOfCamPanels).map((edgeCamId, index) => (
                 ((zoomMultiplier != 1 || maxNumberOfCamPanels <= safeMaxNumberOfCamPanels || isMobile || Math.abs(Math.floor(index / Math.max(1, Math.floor(window.innerWidth / (window.innerHeight / 9 * 16)))) - page) < 2)) &&
                 <CamPanel
                   className={"cam-panal-container"}
-                  key={index} videoClient={client} mode={suggestedMode} camId={camId} page={page}
+                  key={index} videoClient={client} mode={suggestedMode} edgeCamId={edgeCamId} page={page}
                   height={isMobile ? window.innerWidth / 16 * 9 + "px" : zoomMultiplierRef.current === 0 ? `${camPanelDefaultHeight}px` : `${innerHeight / zoomMultiplierRef.current}px`}
                   alwaysAttach={true}
                   justifyContent={justifyContent} // linanw, pass in justifyContent to trigger recalucation of the visibility, when justifyContent changes.

@@ -20,7 +20,7 @@ const ptzTiltMax = 90;
 
 export const CamPanel = (props: {
     videoClient: MutableRefObject<typeof VideoClient>,
-    camId: string,
+    edgeCamId: string,
     mode?: VideoPanelMode,
     className?: string,
     height: string,
@@ -80,8 +80,8 @@ export const CamPanel = (props: {
             const action = payload.action;
             const userId_ = payload.userId;
             if (action === "Start") {
-                const camId = client.current.getUser(userId_)?.displayName;
-                if (camId && camId === props.camId) {
+                const edgeCamId = client.current.getUser(userId_)?.displayName;
+                if (edgeCamId && edgeCamId === props.edgeCamId) {
                     if (userId != userId_) setUserId(userId_);
                     setVideoStarts(videoStartsRef.current + 1);
                     setIsVideoAttached(false); // linanw: in case bot reconnect after killed without leave session. 
@@ -94,7 +94,7 @@ export const CamPanel = (props: {
                 }
             }
         })
-    }, [props.camId]);
+    }, [props.edgeCamId]);
 
     const attachVideo = async () => {
         const mediaStream = client.current.getMediaStream();
@@ -153,8 +153,8 @@ export const CamPanel = (props: {
 
     if (userId == 0) {
         client.current.getAllUser().forEach((user) => {
-            const camId = user.displayName;
-            if (camId && camId === props.camId) {
+            const edgeCamId = user.displayName;
+            if (edgeCamId && edgeCamId === props.edgeCamId) {
                 setUserId(user.userId);
             }
         });
@@ -163,7 +163,7 @@ export const CamPanel = (props: {
     return (
         <div className={props.className}
             style={{ height: props.height }}
-            id={"cam-panal-container_" + props.camId}
+            id={"cam-panal-container_" + props.edgeCamId}
             ref={myRef}
             role="presentation"
             onMouseDown={(e) => {
@@ -195,12 +195,12 @@ export const CamPanel = (props: {
                     pan > ptzPanMax ? pan = ptzPanMax : pan < -ptzPanMax ? pan = -ptzPanMax : pan;
                     tilt > ptzTiltMax ? tilt = ptzTiltMax : tilt < -ptzTiltMax ? tilt = -ptzTiltMax : tilt;
 
-                    const ptzVerticalLine = document.getElementById("ptzVerticallLine_" + props.camId);
+                    const ptzVerticalLine = document.getElementById("ptzVerticallLine_" + props.edgeCamId);
                     const width = ptzVerticalLine?.parentElement?.offsetWidth;
                     if (ptzVerticalLine) {
                         ptzVerticalLine.style.transform = `translateX(` + (pan / 60 * (width ?? 0)) + `px)`;
                     }
-                    const ptzHorizontalLine = document.getElementById("ptzHorizontalLine_" + props.camId);
+                    const ptzHorizontalLine = document.getElementById("ptzHorizontalLine_" + props.edgeCamId);
                     const height = ptzHorizontalLine?.parentElement?.offsetHeight;
                     if (ptzHorizontalLine) {
                         ptzHorizontalLine.style.transform = `translateY(` + (tilt / 35 * (height ?? 0)) + `px)`;
@@ -228,8 +228,8 @@ export const CamPanel = (props: {
             {/* <img style={{ width: '100%', height: '100%', }} src="https://www.shutterstock.com/image-illustration/tv-background-error-design-video-260nw-2052395315.jpg" alt="no signal" hidden={!(mode == VideoPanelMode.Stream && !isVideoAttached)}/> */}
 
             {/* Timelapse */}
-            {/* <iframe title={props.camId} src="timelapse" style={{ width: '100%', height: '100%', }} hidden={!(mode == VideoPanelMode.Timelapse)} /> */}
-            <Timelapse camId={""} hidden={!(mode == VideoPanelMode.Timelapse)} />
+            {/* <iframe title={props.edgeCamId} src="timelapse" style={{ width: '100%', height: '100%', }} hidden={!(mode == VideoPanelMode.Timelapse)} /> */}
+            <Timelapse edgeCamId={props.edgeCamId} angleTag="angle_user" hidden={!(mode == VideoPanelMode.Timelapse)} />
 
             {/* Static */}
             <Snapshot hidden={!(mode == VideoPanelMode.Static)} />
@@ -259,12 +259,12 @@ export const CamPanel = (props: {
             <div className="arrow-box-right text-shadow" hidden={ptzPan < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzPan == 0 ? "" : ptzPan}<img src="/arrow.png" alt="right" className="arrow-right" draggable={false} /></div>
             <div className="arrow-box-up text-shadow" hidden={ptzTilt > 0 || (ptzStartX == 0 && ptzStartY == 0)}><img src="/arrow.png" alt="up" className="arrow-up" draggable={false} />{ptzTilt == 0 ? "" : ptzTilt}</div>
             <div className="arrow-box-down text-shadow" hidden={ptzTilt < 0 || (ptzStartX == 0 && ptzStartY == 0)}>{ptzTilt == 0 ? "" : ptzTilt}<img src="/arrow.png" alt="down" className="arrow-down" draggable={false} /></div>
-            <div id={"ptzVerticallLine_" + props.camId} className="ptz-vertical-line" hidden={!isPTZStarted}></div>
-            <div id={"ptzHorizontalLine_" + props.camId} className="ptz-horizontal-line" hidden={!isPTZStarted}></div>
+            <div id={"ptzVerticallLine_" + props.edgeCamId} className="ptz-vertical-line" hidden={!isPTZStarted}></div>
+            <div id={"ptzHorizontalLine_" + props.edgeCamId} className="ptz-horizontal-line" hidden={!isPTZStarted}></div>
 
             {/* Label */}
             <div className="bottom-right text-shadow">
-                {props.camId}
+                {props.edgeCamId}
                 {/* {userId} */}
                 page: {props.page}
                 <span className={isVideoAttached ? "green" : "gray"}>●</span>

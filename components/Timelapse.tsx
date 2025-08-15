@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean }) => {
+const Timelapse = (props: { edgeCamId: string, angleTag: string, speedMultiplier?: number, hidden?: boolean }) => {
 
     const [currentIntervalId, setCurrentIntervalId] = useState(0);
     const [currentInterval, setCurrentInterval] = useState(0);
@@ -13,13 +13,13 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
     const [indexOverride, setIndexOverride] = useState(-1);
     const [preloadImageAmout, setPreloadImageAmout] = useState(0);
     const [isPreloading, setIsPreloading] = useState(false);
-    const times = props.speedTimes ?? 1000; // default 3000 times faster
+    const times = props.speedMultiplier ?? 1500; // default 3000 times faster
     const interval = (1000 * 60 * 5) / times;  // 5 minutes = 1000*60*5, 3000 times faster
 
     const camAngleAmount = 9;
     const snapshotInterval = 5; // 5 minutes per image
-    const lookBackHours = 1; // 3 hours of timelapse
-    const extraImages = 0; // extra images to search for
+    const lookBackHours = 3; // 3 hours of timelapse
+    const extraImages = 10; // extra images to search for
 
     const maxSearchResults = () => {
         return (60 / snapshotInterval * lookBackHours + extraImages) * camAngleAmount // 3 hours, 60 minutes / 5 minutes per image * 3 images per angle + 10 extra images
@@ -53,6 +53,9 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
                 "secure_url",
                 "tags",
             ],
+            "with_field": [
+                "tags",
+            ],
             "max_results": maxSearchResults(),
         });
 
@@ -74,13 +77,21 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
             setRequestImageListFailed(true);
             return;
         }
-        json.resources.forEach((element: { secure_url: string; tags: string[] }) => {
-            if (element.tags.includes("pty-demo") || element.secure_url.includes("cam0_1735")) {
-                setImagesList(state => [...state, element.secure_url.replace("image/upload", "image/upload/h_360")]);
-            }
+
+        const imagesForTheAngle = json.resources.filter((element: { tags: string[] }) => {
+            const edgeId = props.edgeCamId.split("_")[0];
+            const camId = props.edgeCamId.split("_")[1];
+            // element.tags && element.tags.includes(props.angleTag) && console.log("angleTag:", props.angleTag);
+            return element.tags && element.tags.includes(edgeId) && element.tags.includes(camId) && element.tags.includes("angle_user");
+        });
+
+        console.log("imagesForTheAngle:", imagesForTheAngle.length, "maxSearchResults:", maxSearchResults());
+
+        imagesForTheAngle.forEach((element: { secure_url: string; tags: string[] }) => {
+            setImagesList(state => [...state, element.secure_url.replace("image/upload", "image/upload/h_360")]);
         }
         );
-        setImageFound(json.resources.length);
+        setImageFound(imagesForTheAngle.length);
     }
 
     useEffect(() => {
@@ -97,20 +108,17 @@ const Timelapse = (props: { camId: string, speedTimes?: number, hidden?: boolean
     useEffect(() => {
         if (imagesList.length != 0 && isImagePreloadEnough()) {
             if (currentIntervalId != 0) {
-                console.log("*********clear interval", currentIntervalId);
                 clearInterval(currentIntervalId);
             }
             if (!props.hidden) {
-                console.log("******set interval", interval);
                 const intervalID = setInterval(() => {
                     setCurrentIndex(state => (state + 1) % imagesList.length);
                 }, interval);
-                console.log("******set intervalID", intervalID);
                 setCurrentIntervalId(intervalID as unknown as number); // linanw: if here is a type error, please ignore it, it's not valid.
                 setCurrentInterval(interval);
             }
         }
-    }, [props.speedTimes, preloadImageAmout, props.hidden]
+    }, [props.speedMultiplier, preloadImageAmout, props.hidden]
     );
 
     const isImagePreloadEnough = () => (preloadImageAmout >= imagesList.length * 0.6);

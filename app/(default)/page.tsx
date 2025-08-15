@@ -26,7 +26,7 @@ export default function Home() {
           Beautiful, fast and modern React UI library.
         </h2>
       </div>
-      <Timelapse camId="a" speedTimes={speedTimes}  />
+      <Timelapse edgeCamId="a" speedMultiplier={speedTimes}  />
       <div className="flex gap-3">
         <Link
           isExternal
