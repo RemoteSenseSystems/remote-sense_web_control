@@ -14,14 +14,13 @@ const maxNumberOfCamPanels = 25; // linanw: when this mumber bigger than safeMax
 const maxZoomMultiplier = 5;
 
 // linanw, use "async" here will have error.
-const Videocall = (props: { session_name: string; client_id: string; JWT: string }) => {
+const Videocall = (props: { session_name: string; client_id?: string; JWT: string }) => {
   const [suggestedMode, setSuggestedMode] = useState(VideoPanelMode.Static);
   const session_name = props.session_name;
   const jwt = props.JWT;
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
   const camPanelDefaultHeight = 360;
   const [session, setSession] = useState(undefined);
-  const [edgeCamIdList, setedgeCamIdList] = useState<string[]>(["pty-portable-1_cam0", "pty-portable-1_cam0"]); //
   const [currentTimeoutId, setCurrentTimeoutId] = useState<number>(0);
   const [zoomMultiplier, setZoomMultiplier] = useState(0);
   // const [canvasOffset, setCanvasOffset] = useState(0);
@@ -37,6 +36,8 @@ const Videocall = (props: { session_name: string; client_id: string; JWT: string
   zoomMultiplierRef.current = zoomMultiplier;
   pageRef.current = page;
   viewportChangedRef.current = viewportChanged;
+
+  const edgeCamIdList = props.client_id && props.client_id !== "" ? [props.client_id] : ["default_cam0", "default_cam1,default_cam0", "default_cam1,default_cam0", "default_cam1,default_cam0", "default_cam1"];
 
   const joinSession = async () => {
     await client.current.init("en-US", "Global", { patchJsMedia: true, enforceMultipleVideos: { disableRenderLimits: true } });
@@ -68,9 +69,6 @@ const Videocall = (props: { session_name: string; client_id: string; JWT: string
     if (isMobile != isMobile_) setIsMobile(isMobile_);
   });
 
-  useEffect(() => {
-    if (props.client_id && props.client_id !== '') setedgeCamIdList([props.client_id]);
-  }, [props.client_id]);
 
   useEffect(() => {
     document.body.style.overflow = isMobile ? "auto" : "hidden";

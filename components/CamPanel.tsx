@@ -72,7 +72,7 @@ export const CamPanel = (props: {
     }
 
     useEffect(() => {
-        if(isVideoAttached)enableAudio();
+        if (isVideoAttached) enableAudio();
     }, [isVideoAttached]);
 
     useEffect(() => {
