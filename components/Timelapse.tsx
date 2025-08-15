@@ -61,7 +61,8 @@ const Timelapse = (props: { edgeCamId: string, angleTag?: string, speedMultiplie
             "max_results": maxSearchResults(),
         });
 
-        const response = await fetch("/cld/v1_1/dn9rloq0x/resources/search", {
+        
+        const response = await fetch(`/cld/v1_1/dn9rloq0x/resources/search?cacheKey=${props.edgeCamId}`, {
             method: "POST",
             headers: myHeaders,
             body: raw,
