@@ -37,7 +37,7 @@ const Videocall = (props: { session_name: string; client_id?: string; JWT: strin
   pageRef.current = page;
   viewportChangedRef.current = viewportChanged;
 
-  const edgeCamIdList = props.client_id && props.client_id !== "" ? [props.client_id] : ["default_cam0", "default_cam1,default_cam0", "default_cam1,default_cam0", "default_cam1,default_cam0", "default_cam1"];
+  const edgeCamIdList = props.client_id && props.client_id !== "" ? [props.client_id] : ["default_cam0", "default_cam1", "default_cam0", "default_cam1", "default_cam0", "default_cam1", "default_cam0", "default_cam1"];
 
   const joinSession = async () => {
     await client.current.init("en-US", "Global", { patchJsMedia: true, enforceMultipleVideos: { disableRenderLimits: true } });
