@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const Timelapse = (props: { edgeCamId: string, angleTag: string, speedMultiplier?: number, hidden?: boolean }) => {
+const Timelapse = (props: { edgeCamId: string, angleTag?: string, speedMultiplier?: number, hidden?: boolean }) => {
 
     const [currentIntervalId, setCurrentIntervalId] = useState(0);
     const [currentInterval, setCurrentInterval] = useState(0);
@@ -16,9 +16,11 @@ const Timelapse = (props: { edgeCamId: string, angleTag: string, speedMultiplier
     const times = props.speedMultiplier ?? 1500; // default 3000 times faster
     const interval = (1000 * 60 * 5) / times;  // 5 minutes = 1000*60*5, 3000 times faster
 
+    const angleTag = props.angleTag ?? "angle_user";
+
     const camAngleAmount = 9;
     const snapshotInterval = 5; // 5 minutes per image
-    const lookBackHours = 3; // 3 hours of timelapse
+    const lookBackHours = 24; // 3 hours of timelapse
     const extraImages = 10; // extra images to search for
 
     const maxSearchResults = () => {
@@ -77,12 +79,11 @@ const Timelapse = (props: { edgeCamId: string, angleTag: string, speedMultiplier
             setRequestImageListFailed(true);
             return;
         }
-
+        
         const imagesForTheAngle = json.resources.filter((element: { tags: string[] }) => {
             const edgeId = props.edgeCamId.split("_")[0];
             const camId = props.edgeCamId.split("_")[1];
-            // element.tags && element.tags.includes(props.angleTag) && console.log("angleTag:", props.angleTag);
-            return element.tags && element.tags.includes(edgeId) && element.tags.includes(camId) && element.tags.includes("angle_user");
+            return element.tags && element.tags.includes(edgeId) && element.tags.includes(camId) && element.tags.includes(angleTag);
         });
 
         console.log("imagesForTheAngle:", imagesForTheAngle.length, "maxSearchResults:", maxSearchResults());
