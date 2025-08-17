@@ -35,6 +35,7 @@ export const CamPanel = (props: {
     const [mode, setMode] = useState<VideoPanelMode>(props.mode ?? VideoPanelMode.Static);
     const [userId, setUserId] = useState<number>(0);
     const [isVideoAttached, setIsVideoAttached] = useState(false);
+    const [isLiveButtonBlink, setIsLiveButtonBlink] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [isPTZStarted, setIsPTZStarted] = useState(false);
     const [ptzStartX, setPTZStartX] = useState(0);
@@ -72,8 +73,21 @@ export const CamPanel = (props: {
     }
 
     useEffect(() => {
-        if (isVideoAttached) enableAudio();
+        if (isVideoAttached) {
+            enableAudio();
+            if (mode != VideoPanelMode.Stream) {
+                setIsLiveButtonBlink(true); // linanw: if video is attached, blink live button.
+            }
+        } else if (mode == VideoPanelMode.Stream) {
+            setMode(VideoPanelMode.Static); // linanw: if video is not attached, switch to static mode.
+        }
     }, [isVideoAttached]);
+
+    useEffect(() => {
+        if (mode == VideoPanelMode.Stream && isLiveButtonBlink) {
+            setIsLiveButtonBlink(false); // linanw: stop blinking live button when mode is stream.
+        }
+    }, [mode]);
 
     useEffect(() => {
         client.current.on("peer-video-state-change", async (payload: { action: "Start" | "Stop", userId: number; }) => {
@@ -104,11 +118,12 @@ export const CamPanel = (props: {
                 tempList.push(videoContainerRef.current.children[i]);
             }
             const result = await mediaStream.attachVideo(userId, VideoQuality.Video_360P); // linanw: set 360 but the actual first video quality is 720p
+            (result as VideoPlayer)
             videoContainerRef.current.appendChild(result as VideoPlayer);
-            setIsVideoAttached(true);
             for (var i = 0; i < tempList.length; i++) {
                 tempList[i].remove();
             }
+            setIsVideoAttached(true);
         }
     }
 
@@ -116,7 +131,7 @@ export const CamPanel = (props: {
         if (videoContainerRef.current &&
             videoContainerRef.current.children.length > 0) {
             const mediaStream = client.current.getMediaStream();
-            const elements = await mediaStream.detachVideo(userId);
+            await mediaStream.detachVideo(userId);
             if (isVideoAttached) setIsVideoAttached(false);
         }
     }
@@ -221,6 +236,11 @@ export const CamPanel = (props: {
             }}>
             {/* Live */}
             <div className="fill" ref={videoContainerRef} hidden={!(mode == VideoPanelMode.Stream && isVideoAttached)} />
+            <div className="fill" hidden={!(mode == VideoPanelMode.Stream && !isVideoAttached)} style={{ backgroundColor: "black" }}>
+                <p className="text-shadow" style={{ color: "white", fontSize: "1.5rem", textAlign: "center", marginTop: "20px" }}>
+                     Live stream is suspended.
+                </p>
+            </div>
             {/* <img src="https://thumbs.dreamstime.com/b/connection-concept-glitch-noise-distortion-connection-concept-glitch-noise-distortion-k-video-191192846.jpg" alt="no signal" hidden={!(mode == VideoPanelMode.Stream && !isVideoAttached)} /> */}
             {/* <div  hidden={!(mode == VideoPanelMode.Stream && isVideoAttached && !isFullyVisible())} /> */}
 
@@ -240,7 +260,7 @@ export const CamPanel = (props: {
                     0
                     e.stopPropagation();
                 }}>
-                <button onClick={() => setMode(VideoPanelMode.Stream)}><p className={mode != VideoPanelMode.Stream ? "text-shadow" : "red-glow"}>Live</p></button><br />
+                <button onClick={() => setMode(VideoPanelMode.Stream)}><p className={(mode != VideoPanelMode.Stream ? "text-shadow" : "red-glow") + (isLiveButtonBlink ? " blink-me" : "")}>Live</p></button> <span className={isVideoAttached ? "green" : "gray"}>●</span><br />
                 <button onClick={() => setMode(VideoPanelMode.Static)}><p className={mode != VideoPanelMode.Static ? "text-shadow" : "yellow-glow"}>Snapshot</p></button><br />
                 <button onClick={() => setMode(VideoPanelMode.Timelapse)}><p className={mode != VideoPanelMode.Timelapse ? "text-shadow" : "yellow-glow"}>Timelapse</p></button><br />
                 <button onClick={() => {
@@ -267,7 +287,6 @@ export const CamPanel = (props: {
                 {props.edgeCamId}
                 {/* {userId} */}
                 page: {props.page}
-                <span className={isVideoAttached ? "green" : "gray"}>●</span>
                 <span className={isVisible ? "green" : "gray"}>●</span>
             </div>
         </div>

@@ -247,3 +247,13 @@ background-img {
     background-color: black;
     color: white;
 }
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+.blink-me {
+  animation: blinker 1s linear infinite;
+}
